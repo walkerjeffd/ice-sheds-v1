@@ -124,14 +124,20 @@ var app = window.app = new Vue({
           aggregation: true,
           filter: true,
           min: 0,
-          max: 1000
+          max: 1000,
+          scale: 1,
+          interval: 25,
+          format: ',.1f'
         }, {
           id: "forest",
           label: "Forest Cover (%)",
           aggregation: true,
           filter: true,
           min: 0,
-          max: 100
+          max: 1,
+          scale: 100,
+          interval: 0.025,
+          format: '%'
         }
       ]
     },
@@ -190,16 +196,17 @@ var app = window.app = new Vue({
     vm.fetchDataset(vm.dataset)
       .then(function (data) {
         vm.xf.areaColumn(vm.dataset.columns.area).data(data);
-        vm.xf.addDim('stusps');
+        vm.xf.addCategoricalDim('stusps');
         vm.selectVariable(vm.state.variable);
-        vm.selectLayer(vm.state.layer);
         vm.selectStates(vm.state.states);
         vm.selectFilters(vm.state.filters);
         vm.state.map.getColor = function (id) {
           var value = vm.xf.getAggregationValue(id);
           return value === null ? '#EEE' : vm.state.map.colorScale(value);
         };
-        return true;
+      })
+      .then(function () {
+        return vm.selectLayer(vm.state.layer);
       })
       .catch(function (err) {
         console.error(err);
@@ -209,7 +216,17 @@ var app = window.app = new Vue({
   methods: {
     addFilter: function (id) {
       console.log('app:addFilter()', id);
-      var filter = {id: id};
+      var vm = this;
+
+      var variable = this.getVariable(id);
+      if (!variable) {
+        console.error('Cannot find variable', id);
+        return;
+      }
+
+      var filter = {id: id, variable: variable, getDim: function () { return vm.xf.getDim(id); }};
+
+      this.xf.addFilterDim(id, variable);
       this.state.xf.filters.push(filter);
     },
     removeFilter: function (id) {
@@ -221,7 +238,30 @@ var app = window.app = new Vue({
       if (idx < 0) {
         console.error('Unable to remove filter:' + id);
       }
+      this.xf.removeFilterDim(id);
       this.state.xf.filters.splice(idx, 1);
+    },
+    setFilter: function (id, range) {
+      // console.log('app:setFilter()', id, range);
+      var vm = this;
+
+      var idx = this.state.xf.filters.map(function (d) {
+        return d.id;
+      }).indexOf(id);
+
+      if (idx < 0) {
+        console.error('Unable to find filter:' + id);
+        return;
+      }
+
+      this.xf.setFilterDimRange(id, range);
+
+      this.$set(this.state.xf.filters[idx], 'range', range);
+    },
+    getVariable: function (id) {
+      return this.dataset.variables.filter(function (d) {
+        return d.id == id;
+      })[0]
     },
     fetchDataset: function (dataset) {
       console.log('app:fetchDataset()', dataset);
@@ -234,7 +274,7 @@ var app = window.app = new Vue({
 
           data.forEach(function(d) {
             dataset.variables.forEach(function(v) {
-              d[v.id] = d[v.id] === "" ? null : +d[v.id];
+              d[v.id] = d[v.id] === "" ? null : +d[v.id]/v.scale;
             });
 
             d[dataset.columns.area] = +d[dataset.columns.area];
@@ -254,16 +294,16 @@ var app = window.app = new Vue({
       console.log('app:selectFilters()', filters);
       var vm = this;
 
+      // if filter already exists, remove it
       this.state.filters.forEach(function (filter) {
         if (filters.indexOf(filter) < 0) {
-          // remove existing filter
           vm.removeFilter(filter);
         }
       });
 
+      // if filter does not exist, add it
       filters.forEach(function (filter) {
         if (vm.state.xf.filters.map(function (d) { return d.id; }).indexOf(filter) < 0) {
-          // add new filter
           vm.addFilter(filter);
         }
       });
@@ -290,6 +330,8 @@ var app = window.app = new Vue({
 
           var geojson = topojson.feature(data, data.objects[layer.id]);
 
+          vm.selectFeature();
+
           vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
 
@@ -300,7 +342,7 @@ var app = window.app = new Vue({
     },
     selectStates: function (states) {
       console.log('app:selectStates()', states);
-      this.xf.setFilter('stusps', states);
+      this.xf.setCategoricalDimFilter('stusps', states);
       this.state.states = states;
       this.$set(this.state.xf, 'stusps', states);
     },
@@ -308,9 +350,7 @@ var app = window.app = new Vue({
       console.log('app:selectVariable()', id);
       var vm = this;
 
-      var variable = this.dataset.variables.filter(function (d) {
-        return d.id == id;
-      })[0];
+      var variable = this.getVariable(id);
 
       if (!variable) {
         console.error('Cannot find variable:', id);
@@ -320,6 +360,16 @@ var app = window.app = new Vue({
       this.state.map.colorScale = d3.scale.linear().domain([variable.min, variable.max]).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
 
       this.updateAggregation(this.state.layer, id);
+    },
+    selectFeature: function (feature) {
+      if (feature) {
+        console.log('app:selectFeature(' + feature.id + ')');
+        this.$set(this.state, 'selected', feature);
+
+      } else {
+        console.log('app:selectFeature(none)');
+        this.$delete(this.state, 'selected');
+      }
     },
     setStatus: function (message) {
       this.state.message = message;

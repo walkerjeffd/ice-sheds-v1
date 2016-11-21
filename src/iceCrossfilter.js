@@ -19,6 +19,11 @@ module.exports = function (data) {
   xf.setAggregation = function (byColumn, valueColumn) {
     console.log('xf:setAggregation()', byColumn, valueColumn);
 
+    if (xf.agg && xf.agg.dim) {
+      xf.agg.dim.dispose();
+      xf.agg.group.dispose();
+    }
+
     if (!_areaColumn) {
       console.error('Missing area column in IceCrossfilter');
       return;
@@ -58,7 +63,11 @@ module.exports = function (data) {
     updateValues();
   }
 
-  xf.addDim = function (id) {
+  xf.getAggregationValue = function (id) {
+    return xf.agg.values[id];
+  }
+
+  xf.addCategoricalDim = function (id) {
     var dim = _dims[id] = {};
 
     dim.id = id;
@@ -71,7 +80,7 @@ module.exports = function (data) {
     return xf;
   }
 
-  xf.setFilter = function (id, filter) {
+  xf.setCategoricalDimFilter = function (id, filter) {
     var dim = _dims[id];
 
     if (!dim) {
@@ -88,13 +97,70 @@ module.exports = function (data) {
     return xf;
   }
 
-  xf.getAggregationValue = function (id) {
-    return xf.agg.values[id];
+  xf.addFilterDim = function (id, variable) {
+    console.log('xf:addFilterDim()', id);
+
+    if (_dims[id]) {
+      console.error('filterDim already exists:', id);
+      return;
+    }
+
+    var dim = _dims[id] = {};
+
+    dim.dimension = xf.ndx.dimension(function(d) {
+      return d[id] === null ? -1 : d[id];
+    });
+
+    dim.group = dim.dimension.group(function(d) {
+      return d >= variable.max ? variable.max - variable.interval : Math.floor(d/variable.interval) * variable.interval;
+    });
+
+    return xf;
+  }
+
+  xf.removeFilterDim = function (id, variable) {
+    console.log('xf:removeFilterDim()', id);
+
+    if (!_dims[id]) {
+      console.error('filterDim does not exist:', id);
+      return;
+    }
+
+    var dim = _dims[id];
+
+    dim.dimension.dispose();
+    dim.group.dispose();
+    delete _dims[id];
+
+    return xf;
+  }
+
+  xf.setFilterDimRange = function (id, range) {
+    // console.log('xf:setFilterDim()', id);
+
+    var dim = _dims[id];
+
+    if (!dim) {
+      console.error('Unable to find filter dim:', id);
+    }
+
+    if (range) {
+      dim.dimension.filterRange(range);
+    } else {
+      dim.dimension.filterAll();
+    }
+
+    updateValues();
+
+    return xf;
+  }
+
+  xf.getDim = function (id) {
+    return _dims[id];
   }
 
   function loadData (data) {
     console.log('xf:loadData() length=' + data.length);
-    xf.dims = {};
     xf.ndx = crossfilter(data);
     xf.all = xf.ndx.groupAll();
 
@@ -102,7 +168,7 @@ module.exports = function (data) {
   }
 
   function updateValues() {
-    console.log('xf:updateValues()');
+    // console.log('xf:updateValues()');
     var dim = xf.agg;
 
     dim.group.all().forEach(function(d) {

@@ -21,7 +21,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'displayVariable', 'filters'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'displayVariable', 'filters', 'selected'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -107,7 +107,7 @@ module.exports = {
     }
 
     this.$watch('filters', function (n, o) {
-      console.log('map:watch filters', vm.filters);
+      // console.log('map:watch filters', vm.filters);
       this.renderFill();
     }, {deep: true});
   },
@@ -123,11 +123,11 @@ module.exports = {
     getColor: function (n, o) {
       console.log('map:watch getColor');
       this.renderAll();
+    },
+    selected: function (n, o) {
+      console.log('map:watch selected', (n ? n.id : 'none'));
+      this.renderAll();
     }
-    // filters: function (n, o) {
-    //   console.log('map:watch filters', this.filters);
-    //   this.renderFill();
-    // }
   },
   methods: {
     resizeSvg: function () {
@@ -202,16 +202,25 @@ module.exports = {
         .on('click', function(d, i) {
           if (vm.disableClick) return;
 
-          console.log('Clicked Aggregation Feature', d.id);
+          if (vm.selected && d.id === vm.selected.id) {
+            // this feature is already selected, unselect it
+            vm.$emit('select');
+          } else {
+            // select this feature
+            vm.$emit('select', {id: d.id});
+          }
         });
 
       mousePaths
-        .attr('d', this.path);
+        .attr('d', this.path)
+        .style('stroke', function (d) {
+          return vm.selected && vm.selected.id == d.id ? 'red' : null;
+        });
 
       mousePaths.exit().remove();
     },
     renderFill: function () {
-      console.log('map:renderFill()');
+      // console.log('map:renderFill()');
       var vm = this;
 
       var fillPaths = this.svg.select('g.aggregation-fill')
