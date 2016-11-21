@@ -91,17 +91,6 @@ path.ice-map-path-aggregation-mouse:hover {
   z-index: 1000;
 }
 
-/*.filter-container {
-  position: absolute;
-  right: 0;
-  top: 0;
-  
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-bottom-left-radius: 2px;
-  box-shadow: 0px 0px 3px 0px #aaa;
-}
-*/
 .ice-box {
   padding: 10px;
   width: 100%;
@@ -135,6 +124,40 @@ a {
 }
 
 
+/* ICE FILTER -------------------------------------------------------------- */
+.ice-filter {
+  width: 380px;
+  margin-bottom: 5px;
+}
+
+.ice-filter hr {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.ice-filter .title {
+  font-weight: bold;
+  cursor: pointer;
+  height: 25px;
+}
+
+.background.all.bar {
+  fill: #AAA;
+}
+
+.foreground.all.bar {
+  fill: steelblue;
+}
+
+.foreground.selected.bar {
+  fill: orangered;
+  opacity: 0.7;
+}
+
+.background.selected.bar {
+  fill: orangered;
+  opacity: 0.2;
+}
 
 .loading {
   width: 100%;
@@ -373,22 +396,11 @@ h3 {
   padding: 10px 0;
 }
 
-.chart {
-  /*display: inline-block;*/
-  /*height: 150px;*/
-  width: 380px;
-  margin-bottom: 5px;
-  /*margin-top: 15px;*/
-}
 
 #totals {
   text-align: right;
 }
 
-.chart hr {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
 
 .reset {
   padding-left: 1em;
@@ -404,11 +416,6 @@ h3 {
   cursor:pointer;
 }
 
-.chart .title {
-  font-weight: bold;
-  cursor: pointer;
-  height: 25px;
-}
 
 .summary-box {
   position: fixed;

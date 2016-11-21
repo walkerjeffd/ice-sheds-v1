@@ -138,6 +138,126 @@ var app = window.app = new Vue({
           scale: 100,
           interval: 0.025,
           format: '%'
+        }, {
+          "id": "agriculture",
+          "label": "Agriculture Cover (%)",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 1,
+          "interval": 0.025,
+          "scale": 100,
+          "format": "%"
+        }, {
+          "id": "summer_prcp_mm",
+          "label": "Mean Summer Precip (mm/mon)",
+          "aggregation": true,
+          "filter": true,
+          "min": 70,
+          "max": 230,
+          "interval": 4,
+          "scale": 1,
+          "format": ",.1f"
+        }, {
+          "id": "meanSummerTemp",
+          "label": "Mean Summer Temp (C)",
+          "aggregation": true,
+          "filter": true,
+          "min": 14,
+          "max": 24,
+          "interval": 0.25,
+          "scale": 1,
+          "format": ",.1f"
+        }, {
+          "id": "meanDays_18",
+          "label": "Mean Days per Year > 18 C",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 240,
+          "interval": 6,
+          "scale": 1,
+          "format": ",.1f"
+        }, {
+          "id": "meanDays_22",
+          "label": "Mean Days per Year > 22 C",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 60,
+          "interval": 1.5,
+          "scale": 1,
+          "format": ",.0f"
+        }, {
+          "id": "occ_current",
+          "label": "Probability of Brook Trout Occupancy",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 1,
+          "interval": 0.025,
+          "scale": 1,
+          "format": "%"
+        }, {
+          "id": "max_temp_0_3",
+          "label": "Threshold Temp (C) for 30% Occupancy",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 6,
+          "interval": 0.15,
+          "scale": 1,
+          "format": ".2f"
+        }, {
+          "id": "max_temp_0_5",
+          "label": "Threshold Temp (C) for 50% Occupancy",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 6,
+          "interval": 0.15,
+          "scale": 1,
+          "format": ".2f"
+        }, {
+          "id": "max_temp_0_7",
+          "label": "Threshold Temp (C) for 70% Occupancy",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 6,
+          "interval": 0.15,
+          "scale": 1,
+          "format": ".2f"
+        }, {
+          "id": "plus2",
+          "label": "Occupancy Prob with 2 C Incr. in July Temp",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 1,
+          "interval": 0.025,
+          "scale": 1,
+          "format": "%"
+        }, {
+          "id": "plus4",
+          "label": "Occupancy Prob with 4 C Incr. in July Temp",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 1,
+          "interval": 0.025,
+          "scale": 1,
+          "format": "%"
+        }, {
+          "id": "plus6",
+          "label": "Occupancy Prob with 6 C Incr. in July Temp",
+          "aggregation": true,
+          "filter": true,
+          "min": 0,
+          "max": 1,
+          "interval": 0.025,
+          "scale": 1,
+          "format": "%"
         }
       ]
     },
@@ -224,10 +344,27 @@ var app = window.app = new Vue({
         return;
       }
 
-      var filter = {id: id, variable: variable, getDim: function () { return vm.xf.getDim(id); }};
+      var filter = {
+        id: id,
+        variable: variable,
+        getDim: function () {
+          return vm.xf.getDim(id);
+        },
+        getSelectedDim: function () { return; }
+      };
 
       this.xf.addFilterDim(id, variable);
+      if (this.state.selected) {
+        this.state.selected.xf.addFilterDim(id, variable);
+        filter.getSelectedDim = function () {
+          return vm.state.selected.xf.getDim(filter.id);
+        }
+      }
+
       this.state.xf.filters.push(filter);
+      if (this.state.filters.indexOf(id) < 0) {
+        this.state.filters.push(id);
+      }
     },
     removeFilter: function (id) {
       console.log('app:removeFilter()', id);
@@ -237,9 +374,20 @@ var app = window.app = new Vue({
 
       if (idx < 0) {
         console.error('Unable to remove filter:' + id);
+        return;
       }
+
       this.xf.removeFilterDim(id);
+      if (this.state.selected) {
+        this.state.selected.xf.removeFilterDim(id);
+      }
+
       this.state.xf.filters.splice(idx, 1);
+
+      idx = this.state.filters.indexOf(id);
+      if (idx >= 0) {
+        this.state.filters.splice(idx, 1);
+      }
     },
     setFilter: function (id, range) {
       // console.log('app:setFilter()', id, range);
@@ -255,6 +403,9 @@ var app = window.app = new Vue({
       }
 
       this.xf.setFilterDimRange(id, range);
+      if (this.state.selected) {
+        this.state.selected.xf.setFilterDimRange(id, range);
+      }
 
       this.$set(this.state.xf.filters[idx], 'range', range);
     },
@@ -343,6 +494,8 @@ var app = window.app = new Vue({
     selectStates: function (states) {
       console.log('app:selectStates()', states);
       this.xf.setCategoricalDimFilter('stusps', states);
+      if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter('stusps', states);
+
       this.state.states = states;
       this.$set(this.state.xf, 'stusps', states);
     },
@@ -362,12 +515,33 @@ var app = window.app = new Vue({
       this.updateAggregation(this.state.layer, id);
     },
     selectFeature: function (feature) {
+      var vm = this;
       if (feature) {
-        console.log('app:selectFeature(' + feature.id + ')');
+        console.log('app:selectFeature(' + feature.id + ') create');
         this.$set(this.state, 'selected', feature);
 
-      } else {
-        console.log('app:selectFeature(none)');
+        // create new crossfilter using only data for selected feature
+        var subset = this.xf.data().filter(function (d) {
+          return d[vm.state.layer] === feature.id;
+        });
+        var xf = this.state.selected.xf = IceCrossfilter().data(subset);
+
+        // add categorical dimensions
+        xf.addCategoricalDim('stusps').setCategoricalDimFilter('stusps', this.state.states);
+
+        // add filter dimensions
+        this.state.xf.filters.forEach(function (filter) {
+          xf.addFilterDim(filter.id, filter.variable).setFilterDimRange(filter.id, filter.range);
+          filter.getSelectedDim = function () {
+            return xf.getDim(filter.id);
+          };
+        });
+      } else if (this.state.selected) {
+        console.log('app:selectFeature(' + this.state.selected.id + ') destroy');
+        this.state.selected.xf.destroy();
+        this.state.filters.forEach(function (filter) {
+          filter.getSelectedDim = function () { return; };
+        });
         this.$delete(this.state, 'selected');
       }
     },

@@ -1,7 +1,7 @@
 var crossfilter = require('crossfilter');
 
 module.exports = function (data) {
-  var xf = {}, _dims = {}, _data, _areaColumn;
+  var xf = {}, _dims = {}, _data, _area;
 
   xf.data = function (_) {
     if (!arguments.length) return _data;
@@ -11,44 +11,45 @@ module.exports = function (data) {
   }
 
   xf.areaColumn = function (_) {
-    if (!arguments.length) return _areaColumn;
-    _areaColumn = _;
+    if (!arguments.length) return _area;
+    _area = _;
     return xf;
   }
 
-  xf.setAggregation = function (byColumn, valueColumn) {
-    console.log('xf:setAggregation()', byColumn, valueColumn);
+  xf.setAggregation = function (key, value) {
+    console.log('xf:setAggregation()', key, value);
 
     if (xf.agg && xf.agg.dim) {
       xf.agg.dim.dispose();
       xf.agg.group.dispose();
     }
 
-    if (!_areaColumn) {
+    if (!_area) {
       console.error('Missing area column in IceCrossfilter');
       return;
     }
 
     xf.agg = {};
+    xf.agg.key = key;
     xf.agg.dim = xf.ndx.dimension(function (d) {
-      return d[byColumn];
+      return d[key];
     });
 
     xf.agg.group = xf.agg.dim.group().reduce(
       function reduceAdd(p, v) {
-        if (v[valueColumn] !== null) {
+        if (v[value] !== null) {
           p.count += 1;
-          p.sum += v[valueColumn]*v[_areaColumn];
-          p.area += v[_areaColumn];
+          p.sum += v[value]*v[_area];
+          p.area += v[_area];
           p.mean = p.count >= 1 ? p.sum/p.area : null;
         }
         return p ;
       },
       function reduceRemove(p, v) {
-        if (v[valueColumn] !== null) {
+        if (v[value] !== null) {
           p.count -= 1;
-          p.sum -= v[valueColumn]*v[_areaColumn];
-          p.area -= v[_areaColumn];
+          p.sum -= v[value]*v[_area];
+          p.area -= v[_area];
           p.mean = p.count >= 1 ? p.sum/p.area : null;
         }
         return p;
@@ -118,7 +119,7 @@ module.exports = function (data) {
     return xf;
   }
 
-  xf.removeFilterDim = function (id, variable) {
+  xf.removeFilterDim = function (id) {
     console.log('xf:removeFilterDim()', id);
 
     if (!_dims[id]) {
@@ -131,6 +132,8 @@ module.exports = function (data) {
     dim.dimension.dispose();
     dim.group.dispose();
     delete _dims[id];
+
+    updateValues();
 
     return xf;
   }
@@ -159,6 +162,21 @@ module.exports = function (data) {
     return _dims[id];
   }
 
+  xf.destroy = function () {
+    var keys = Object.keys(_dims);
+
+    keys.forEach(function (key) {
+      xf.removeFilterDim(key);
+    })
+
+    if (xf.agg && xf.agg.dim) {
+      xf.agg.dim.dispose();
+      xf.agg.group.dispose();
+    }
+
+    xf.all.dispose();
+  }
+
   function loadData (data) {
     console.log('xf:loadData() length=' + data.length);
     xf.ndx = crossfilter(data);
@@ -169,6 +187,7 @@ module.exports = function (data) {
 
   function updateValues() {
     // console.log('xf:updateValues()');
+    if (!xf.agg) return;
     var dim = xf.agg;
 
     dim.group.all().forEach(function(d) {

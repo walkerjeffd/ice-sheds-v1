@@ -1,25 +1,25 @@
 module.exports = {
-  props: ['id', 'range', 'variable', 'filters', 'getDim'],
+  props: ['id', 'range', 'variable', 'filters', 'selected', 'getDim', 'getSelectedDim'],
   template: '<div class="ice-filter">' +
-      '<div class="chart">' +
-        '<div class="title">{{variable.label}}<a class="reset" style="display: none;">reset</a><div class="btn btn-default btn-xs pull-right">×</div></div>' +
-        '<div class="stats"><span class="extent">{{rangeLabel}}</span></div>' +
-      '</div>' +
+      '<div class="title">{{variable.label}} <a class="reset" style="display: none;">reset</a><div class="btn btn-default btn-xs pull-right" v-on:click="destroy">×</div></div>' +
+      '<div class="stats"><span class="extent">{{rangeLabel}}</span></div>' +
+      '<svg></svg>' +
     '</div>',
   mounted: function () {
     console.log('filter(' + this.id + '):mounted');
     var vm = this;
 
     var margin = {
-        top: 10,
-        right: 20,
-        bottom: 20,
-        left: 10
-      };
+          top: 10,
+          right: 20,
+          bottom: 20,
+          left: 10
+        };
+
     this.width = 360,
     this.height = 100;
 
-    this.svg = d3.select(this.$el).select('.chart').append("svg")
+    this.svg = d3.select(this.$el).select("svg")
       .attr("width", this.width + margin.left + margin.right)
       .attr("height", this.height + margin.top + margin.bottom);
 
@@ -32,12 +32,20 @@ module.exports = {
       .attr("width", this.width)
       .attr("height", this.height);
 
-    g.selectAll(".bar")
+    g.selectAll(".all.bar")
       .data(["background", "foreground"])
       .enter()
       .append("path")
       .attr("class", function(d) {
-        return d + " bar";
+        return d + " all bar";
+      });
+
+    g.selectAll(".selected.bar")
+      .data(["background", "foreground"])
+      .enter()
+      .append("path")
+      .attr("class", function(d) {
+        return d + " selected bar";
       });
 
     g.selectAll(".foreground.bar")
@@ -45,7 +53,7 @@ module.exports = {
 
     this.scales = {
       x: d3.scale.linear().domain([this.variable.min, this.variable.max]).rangeRound([0, this.width]),
-      y: d3.scale.linear().range([70, 0])
+      y: d3.scale.linear().range([this.height, 0])
     };
     this.axes = {
       x: d3.svg.axis().orient("bottom").scale(this.scales.x)
@@ -61,17 +69,13 @@ module.exports = {
     gBrush.selectAll("rect").attr("height", this.height);
     gBrush.selectAll(".resize").append("path").attr("d", resizePath);
 
-    // vm.brush.on("brushstart.chart", function() {
-    //   console.log('brushstart.chart');
-    // });
-
-    vm.brush.on("brush.chart", function() {
+    this.brush.on("brush.chart", function() {
       // console.log('brush.chart', vm.id, vm.brush.extent());
       vm.$emit('brush', vm.id, vm.brush.extent());
       vm.drawBrush();
     });
 
-    vm.brush.on("brushend.chart", function() {
+    this.brush.on("brushend.chart", function() {
       // console.log('brushend.chart', vm.id, vm.brush.extent());
       if (vm.brush.empty()) {
         vm.$emit('brush', vm.id);
@@ -89,7 +93,7 @@ module.exports = {
     }
 
     this.$watch('filters', function (n, o) {
-      this.render();
+      vm.render();
     }, {deep: true});
   },
   computed: {
@@ -99,6 +103,12 @@ module.exports = {
       return this.range && this.range.length == 2 ?
         formatter(this.range[0]) + ' - ' + formatter(this.range[1]) :
         formatter(this.variable.min) + ' - ' + formatter(this.variable.max);
+    }
+  },
+  watch: {
+    selected: function () {
+      console.log('filter(' + this.id + '):watch selected');
+      this.render();
     }
   },
   methods: {
@@ -115,7 +125,7 @@ module.exports = {
       }
     },
     render: function () {
-      // console.log('filter(' + this.id + '):render()');
+      console.log('filter(' + this.id + '):render()');
       var vm = this;
 
       var groups = this.getDim().group.all();
@@ -124,8 +134,19 @@ module.exports = {
       }
 
       this.scales.y.domain([0, d3.max(groups, function(d) { return d.value; })]);
-
-      this.svg.selectAll(".bar").datum(groups).attr("d", barPath);
+      this.svg.selectAll(".all.bar").datum(groups).attr("d", barPath);
+      var selectedDim = this.getSelectedDim();
+      if (selectedDim) {
+        var selectedGroups = selectedDim.group.all();
+        if (selectedGroups[0].key < 0) {
+          selectedGroups = selectedGroups.slice(1, selectedGroups.length);
+        }
+        var yMax = d3.max(selectedGroups, function(d) { return d.value; });
+        this.scales.y.domain([0, yMax]);
+        this.svg.selectAll(".selected.bar").datum(selectedGroups).attr("d", barPath);
+      } else {
+        this.svg.selectAll(".selected.bar").datum([]).attr("d", barPath);
+      }
 
       function barPath(groups) {
         var path = [],
@@ -138,6 +159,11 @@ module.exports = {
         }
         return path.join("");
       }
+    },
+    destroy: function () {
+      // console.log('filter(' + this.id + '):destroy()', d3.select(this.$el));
+      // this.svg.remove();
+      this.$emit('destroy', this.id);
     }
   }
 }

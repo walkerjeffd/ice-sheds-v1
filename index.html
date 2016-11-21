@@ -55,7 +55,7 @@
         <div class="ice-box-title">Catchment Filters and Histograms</div>
         <select-picker :config="options.filters.config" :options="options.filters.options" :selected="state.filters" v-on:input="selectFilters" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
         <hr>
-        <ice-filter v-for="filter in state.xf.filters" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :get-dim="filter.getDim" v-on:brush="setFilter"></ice-filter>
+        <div is="ice-filter" v-for="filter in state.xf.filters" :key="filter.id" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :selected="state.selected" :get-dim="filter.getDim" :get-selected-dim="filter.getSelectedDim" v-on:brush="setFilter" v-on:destroy="removeFilter"></div>
       </div>
     </div>
     <ice-status :message="state.message"></ice-status>
