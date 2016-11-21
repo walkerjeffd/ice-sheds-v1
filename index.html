@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Interactive Catchment Explorer</title>
+
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans:600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bower_components/bootstrap-select/dist/css/bootstrap-select.min.css">
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+<div class="full" id="app">
+  <div class="header">
+    <span class="brand">SHEDS: Interactive Catchment Explorer</span>
+    <div class="pull-right">
+      <a href="#" data-toggle="modal" data-target="#data-modal">Data Sources</a> |
+      <a href="http://ice.ecosheds.org">ICE Home</a> |
+      <a href="http://ecosheds.org">SHEDS Home</a>
+    </div>
+  </div>
+  <div class="map-container">
+    <div class="ice-left-sidebar">
+      <div class="ice-box">
+        <div class="ice-box-title">Aggregation Level</div>
+        <select-single :config="options.layer.config" :options="options.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id"></select-single>
+      </div>
+      <div class="ice-box">
+        <div class="ice-box-title">Region Filter</div>
+        <select-multiple :config="options.states.config" :options="options.states.options" :selected="state.states" v-on:input="selectStates" label="label" value="id" title="Select states..."></select-multiple>
+      </div>
+      <div class="ice-box">
+        <div class="ice-box-title">Display Variable</div>
+        <select-single :config="options.variable.config" :options="options.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-single>
+      </div>
+      <div class="ice-box">
+        <div class="ice-box-title">State Debug</div>
+        <div>Layer: {{ state.layer }}</div>
+        <div>States: {{ state.states.length > 0 ? state.states.join(', ') : 'None' }}</div>
+        <div>Variable: {{ state.variable }}</div>
+        <div>Filters: {{ state.filters.length > 0 ? state.filters.join(', ') : 'None' }}</div>
+      </div>
+    </div>
+    <div class="ice-right-sidebar">
+      <div class="ice-box">
+        <div class="ice-box-title">Catchment Filters and Histograms</div>
+        <select-multiple :config="options.filters.config" :options="options.filters.options" :selected="state.filters" v-on:input="selectFilters" label="label" value="id" title="Select filter variables..."></select-multiple>
+      </div>
+    </div>
+    <ice-status :message="state.message"></ice-status>
+    <ice-map :center="options.map.view.center" :zoom="options.map.view.zoom" :basemaps="options.map.basemaps" :overlays="options.map.overlays" :aggregation-layer="map.aggregationLayer" :display-variable="state.variable" :get-color="map.getColor"></ice-map>
+  </div>
+</div>
+
+
+<script src="bower_components/jquery/dist/jquery.js"></script>
+<script src="http://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+<script src="bower_components/bootstrap-select/dist/js/bootstrap-select.js"></script>
+<script src="bower_components/d3/d3.js"></script>
+<script src="js/bundle.js"></script>
+
+</body>
+
+</html>

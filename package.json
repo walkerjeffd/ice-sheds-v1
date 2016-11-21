@@ -1,0 +1,35 @@
+{
+  "name": "ice-vue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server .",
+    "build": "browserify -t aliasify -e src/main.js -o js/bundle.js",
+    "watch": "watchify -t aliasify -e src/main.js -o js/bundle.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "aliasify": {
+    "aliases": {
+      "vue": "vue/dist/vue"
+    }
+  },
+  "devDependencies": {
+    "aliasify": "^2.1.0",
+    "browserify": "^13.1.1",
+    "browserify-hmr": "^0.3.5",
+    "vue-hot-reload-api": "^2.0.6",
+    "vueify": "^9.3.0",
+    "watchify": "^3.7.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "crossfilter": "^1.3.12",
+    "leaflet": "^1.0.1",
+    "leaflet-bing-layer": "^3.1.0",
+    "topojson-client": "^2.1.0",
+    "vue": "^2.0.8"
+  }
+}
