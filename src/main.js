@@ -113,7 +113,8 @@ var app = window.app = new Vue({
         { id: 'PA', label: 'Pennsylvania' },
         { id: 'RI', label: 'Rhode Island' },
         { id: 'VT', label: 'Vermont' },
-        { id: 'VA', label: 'Virginia' }
+        { id: 'VA', label: 'Virginia' },
+        { id: 'WV', label: 'West Virginia' }
       ],
       variables: [
         {
@@ -138,13 +139,17 @@ var app = window.app = new Vue({
       layer: 'huc8',
       variable: 'forest',
       filters: [],
-      states: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA']
-    },
-    map: {
-      aggregationLayer: undefined,
-      getColor: function (id) {
-        return Math.random()
-      }.bind(this)
+      states: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA', 'WV'],
+      xf: {
+        filters: {
+        }
+      },
+      map: {
+        aggregationLayer: undefined,
+        getColor: function (id) {
+          return Math.random()
+        }.bind(this)
+      }
     },
   },
   mounted: function () {
@@ -185,11 +190,13 @@ var app = window.app = new Vue({
     vm.fetchDataset(vm.dataset)
       .then(function (data) {
         vm.xf.areaColumn(vm.dataset.columns.area).data(data);
+        vm.xf.addDim('stusps');
         vm.selectVariable(vm.state.variable);
-        vm.selectLayer(vm.state.layer)
-        vm.map.getColor = function (id) {
+        vm.selectLayer(vm.state.layer);
+        vm.selectStates(vm.state.states);
+        vm.state.map.getColor = function (id) {
           var value = vm.xf.getAggregationValue(id);
-          return vm.map.colorScale(value);
+          return vm.state.map.colorScale(value);
         };
         return true;
       })
@@ -250,7 +257,7 @@ var app = window.app = new Vue({
 
           var geojson = topojson.feature(data, data.objects[layer.id]);
 
-          vm.map.aggregationLayer = geojson;
+          vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
 
           vm.setStatus('Ready!');
@@ -260,11 +267,14 @@ var app = window.app = new Vue({
     },
     selectStates: function (states) {
       console.log('app:selectStates()', states);
+      this.xf.setFilter('stusps', states);
       this.state.states = states;
+      this.$set(this.state.xf.filters, 'stusps', states);
     },
     selectVariable: function (id) {
       console.log('app:selectVariable()', id);
       var vm = this;
+
       var variable = this.dataset.variables.filter(function (d) {
         return d.id == id;
       })[0];
@@ -274,7 +284,7 @@ var app = window.app = new Vue({
         return;
       }
 
-      this.map.colorScale = d3.scale.linear().domain([variable.min, variable.max]).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
+      this.state.map.colorScale = d3.scale.linear().domain([variable.min, variable.max]).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
 
       this.updateAggregation(this.state.layer, id);
     },

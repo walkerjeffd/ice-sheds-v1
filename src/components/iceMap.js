@@ -21,7 +21,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'displayVariable'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'displayVariable', 'filters'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -105,6 +105,11 @@ module.exports = {
       var point = leafletMap.latLngToLayerPoint(new L.LatLng(y, x));
       this.stream.point(point.x, point.y);
     }
+
+    this.$watch('filters', function (n, o) {
+      console.log('map:watch filters', vm.filters);
+      this.renderFill();
+    }, {deep: true});
   },
   watch: {
     aggregationLayer: function (n, o) {
@@ -112,13 +117,17 @@ module.exports = {
       this.resizeSvg();
     },
     displayVariable: function (n, o) {
-      console.log('IceMap:displayVariable()', n);
+      console.log('map:watch displayVariable', n);
       this.renderAll();
     },
-    getColor: function () {
-      console.log('IceMap: watch getColor');
+    getColor: function (n, o) {
+      console.log('map:watch getColor');
       this.renderAll();
     }
+    // filters: function (n, o) {
+    //   console.log('map:watch filters', this.filters);
+    //   this.renderFill();
+    // }
   },
   methods: {
     resizeSvg: function () {
@@ -137,6 +146,7 @@ module.exports = {
       this.renderAll();
     },
     renderAll: function () {
+      console.log('map:renderAll()');
       var vm = this;
 
       var features = [];
@@ -199,6 +209,18 @@ module.exports = {
         .attr('d', this.path);
 
       mousePaths.exit().remove();
+    },
+    renderFill: function () {
+      console.log('map:renderFill()');
+      var vm = this;
+
+      var fillPaths = this.svg.select('g.aggregation-fill')
+        .selectAll('path.ice-map-path-aggregation-fill');
+
+      fillPaths
+        .style('fill', function(d, i) {
+          return vm.getColor(d.id);
+        })
     }
   }
 };

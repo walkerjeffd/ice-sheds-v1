@@ -44,6 +44,10 @@
         <div>States: {{ state.states.length > 0 ? state.states.join(', ') : 'None' }}</div>
         <div>Variable: {{ state.variable }}</div>
         <div>Filters: {{ state.filters.length > 0 ? state.filters.join(', ') : 'None' }}</div>
+        <div>
+          Crossfilter:
+          <pre>{{ state.xf }}</pre>
+        </div>
       </div>
     </div>
     <div class="ice-right-sidebar">
@@ -53,7 +57,7 @@
       </div>
     </div>
     <ice-status :message="state.message"></ice-status>
-    <ice-map :center="options.map.view.center" :zoom="options.map.view.zoom" :basemaps="options.map.basemaps" :overlays="options.map.overlays" :aggregation-layer="map.aggregationLayer" :display-variable="state.variable" :get-color="map.getColor"></ice-map>
+    <ice-map :center="options.map.view.center" :zoom="options.map.view.zoom" :basemaps="options.map.basemaps" :overlays="options.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-color="state.map.getColor" :filters="state.xf.filters"></ice-map>
   </div>
 </div>
 
