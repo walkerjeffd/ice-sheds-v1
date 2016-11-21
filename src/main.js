@@ -2,8 +2,7 @@ var Vue = require('vue'),
     Promise = require('bluebird'),
     topojson = require('topojson-client');
 
-Vue.component('select-single', require('./components/selectSingle'));
-Vue.component('select-multiple',require('./components/selectMultiple'));
+Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-map', require('./components/iceMap'));
 Vue.component('ice-status', require('./components/iceStatus'));
 
@@ -15,56 +14,18 @@ var app = window.app = new Vue({
     options: {
       layer: {
         config: {},
-        options: [
-          {
-            id: 'huc4',
-            label: 'HUC4',
-            url: 'data/huc4.topojson'
-          }, {
-            id: 'huc6',
-            label: 'HUC6',
-            url: 'data/huc6.topojson'
-          }, {
-            id: 'huc8',
-            label: 'HUC8',
-            url: 'data/huc8.topojson'
-          }, {
-            id: 'huc10',
-            label: 'HUC10',
-            url: 'data/huc10.topojson'
-          }
-        ]
+        options: []
       },
       variable: {
         config: {},
-        options: [
-          {
-            id: 'elevation',
-            label: 'Elevation (m)',
-            min: 0,
-            max: 1000
-          }, {
-            id: 'forest',
-            label: '% Forest Cover',
-            min: 0,
-            max: 100
-          }
-        ]
+        options: []
       },
       filters: {
         config: {
           selectedTextFormat: 'count',
           countSelectedText: '{0} variables selected'
         },
-        options: [
-          {
-            id: 'elevation',
-            label: 'Elevation (m)'
-          }, {
-            id: 'forest',
-            label: '% Forest Cover'
-          }
-        ]
+        options: []
       },
       states: {
         config: {
@@ -72,21 +33,7 @@ var app = window.app = new Vue({
           selectedTextFormat: 'count',
           countSelectedText: '{0} states selected'
         },
-        options: [
-          {id: 'CT', label: 'Connecticut'},
-          {id: 'DE', label: 'Delaware'},
-          {id: 'DC', label: 'District of Columbia'},
-          {id: 'ME', label: 'Maine'},
-          {id: 'MD', label: 'Maryland'},
-          {id: 'MA', label: 'Massachusetts'},
-          {id: 'NH', label: 'New Hampshire'},
-          {id: 'NJ', label: 'New Jersey'},
-          {id: 'NY', label: 'New York'},
-          {id: 'PA', label: 'Pennsylvania'},
-          {id: 'RI', label: 'Rhode Island'},
-          {id: 'VT', label: 'Vermont'},
-          {id: 'VA', label: 'Virginia'}
-        ]
+        options: []
       },
       map: {
         view: {
@@ -134,24 +81,62 @@ var app = window.app = new Vue({
         area: 'AreaSqKM',
         id: 'featureid'
       },
+      layers: [
+        {
+          id: 'huc4',
+          label: 'HUC4',
+          url: 'data/huc4.topojson'
+        }, {
+          id: 'huc6',
+          label: 'HUC6',
+          url: 'data/huc6.topojson'
+        }, {
+          id: 'huc8',
+          label: 'HUC8',
+          url: 'data/huc8.topojson'
+        }, {
+          id: 'huc10',
+          label: 'HUC10',
+          url: 'data/huc10.topojson'
+        }
+      ],
+      states: [
+        { id: 'CT', label: 'Connecticut' },
+        { id: 'DE', label: 'Delaware' },
+        { id: 'DC', label: 'District of Columbia' },
+        { id: 'ME', label: 'Maine' },
+        { id: 'MD', label: 'Maryland' },
+        { id: 'MA', label: 'Massachusetts' },
+        { id: 'NH', label: 'New Hampshire' },
+        { id: 'NJ', label: 'New Jersey' },
+        { id: 'NY', label: 'New York' },
+        { id: 'PA', label: 'Pennsylvania' },
+        { id: 'RI', label: 'Rhode Island' },
+        { id: 'VT', label: 'Vermont' },
+        { id: 'VA', label: 'Virginia' }
+      ],
       variables: [
         {
           id: "elevation",
           label: "Elevation (m)",
           aggregation: true,
-          filter: true
+          filter: true,
+          min: 0,
+          max: 1000
         }, {
           id: "forest",
           label: "Forest Cover (%)",
           aggregation: true,
-          filter: true
+          filter: true,
+          min: 0,
+          max: 100
         }
       ]
     },
     state: {
       message: 'Initializing...',
       layer: 'huc8',
-      variable: 'elevation',
+      variable: 'forest',
       filters: [],
       states: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA']
     },
@@ -166,8 +151,38 @@ var app = window.app = new Vue({
     var vm = this;
     vm.xf = IceCrossfilter();
 
+    // set up select options
+    vm.options.layer.options = vm.dataset.layers.map(function (d) {
+        return {
+          id: d.id,
+          label: d.label
+        };
+      });
+    vm.options.variable.options = vm.dataset.variables.filter(function (d) {
+        return d.aggregation;
+      }).map(function (d) {
+        return {
+          id: d.id,
+          label: d.label
+        };
+      });
+    vm.options.states.options = vm.dataset.states.map(function (d) {
+      return {
+        id: d.id,
+        label: d.label
+      };
+    });
+    vm.options.filters.options = vm.dataset.variables.filter(function (d) {
+        return d.filter;
+      }).map(function (d) {
+        return {
+          id: d.id,
+          label: d.label
+        };
+      });
+
     // initialize
-    vm.loadDataset(vm.dataset)
+    vm.fetchDataset(vm.dataset)
       .then(function (data) {
         vm.xf.areaColumn(vm.dataset.columns.area).data(data);
         vm.selectVariable(vm.state.variable);
@@ -184,8 +199,8 @@ var app = window.app = new Vue({
       });
   },
   methods: {
-    loadDataset: function (dataset) {
-      console.log('app:loadDataset()', dataset);
+    fetchDataset: function (dataset) {
+      console.log('app:fetchDataset()', dataset);
       var vm = this;
 
       vm.setStatus('Loading dataset...');
@@ -215,15 +230,16 @@ var app = window.app = new Vue({
       console.log('app:selectFilters()', filters);
       this.state.filters = filters;
     },
-    selectLayer: function (layerId) {
-      console.log('app:selectLayer()', layerId);
+    selectLayer: function (id) {
+      console.log('app:selectLayer()', id);
       var vm = this;
 
-      var layer = vm.options.layer.options.filter(function (d) {
-        return d.id === layerId;
+      var layer = vm.dataset.layers.filter(function (d) {
+        return d.id === id;
       })[0];
 
       if (!layer) {
+        console.error('Unable to get layer', id);
         return;
       }
 
@@ -235,7 +251,7 @@ var app = window.app = new Vue({
           var geojson = topojson.feature(data, data.objects[layer.id]);
 
           vm.map.aggregationLayer = geojson;
-          vm.updateAggregation(layerId, vm.state.variable);
+          vm.updateAggregation(id, vm.state.variable);
 
           vm.setStatus('Ready!');
           return resolve(geojson);
@@ -249,7 +265,7 @@ var app = window.app = new Vue({
     selectVariable: function (id) {
       console.log('app:selectVariable()', id);
       var vm = this;
-      var variable = this.options.variable.options.filter(function (d) {
+      var variable = this.dataset.variables.filter(function (d) {
         return d.id == id;
       })[0];
 
