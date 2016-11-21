@@ -3,6 +3,7 @@ var Vue = require('vue'),
     topojson = require('topojson-client');
 
 Vue.component('select-picker', require('./components/selectPicker'));
+Vue.component('ice-filter', require('./components/iceFilter'));
 Vue.component('ice-map', require('./components/iceMap'));
 Vue.component('ice-status', require('./components/iceStatus'));
 
@@ -138,11 +139,10 @@ var app = window.app = new Vue({
       message: 'Initializing...',
       layer: 'huc8',
       variable: 'forest',
-      filters: [],
+      filters: ['forest'],
       states: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA', 'WV'],
       xf: {
-        filters: {
-        }
+        filters: []
       },
       map: {
         aggregationLayer: undefined,
@@ -194,6 +194,7 @@ var app = window.app = new Vue({
         vm.selectVariable(vm.state.variable);
         vm.selectLayer(vm.state.layer);
         vm.selectStates(vm.state.states);
+        vm.selectFilters(vm.state.filters);
         vm.state.map.getColor = function (id) {
           var value = vm.xf.getAggregationValue(id);
           return value === null ? '#EEE' : vm.state.map.colorScale(value);
@@ -206,6 +207,22 @@ var app = window.app = new Vue({
       });
   },
   methods: {
+    addFilter: function (id) {
+      console.log('app:addFilter()', id);
+      var filter = {id: id};
+      this.state.xf.filters.push(filter);
+    },
+    removeFilter: function (id) {
+      console.log('app:removeFilter()', id);
+      var idx = this.state.xf.filters.map(function (d) {
+        return d.id;
+      }).indexOf(id);
+
+      if (idx < 0) {
+        console.error('Unable to remove filter:' + id);
+      }
+      this.state.xf.filters.splice(idx, 1);
+    },
     fetchDataset: function (dataset) {
       console.log('app:fetchDataset()', dataset);
       var vm = this;
@@ -235,6 +252,22 @@ var app = window.app = new Vue({
     },
     selectFilters: function (filters) {
       console.log('app:selectFilters()', filters);
+      var vm = this;
+
+      this.state.filters.forEach(function (filter) {
+        if (filters.indexOf(filter) < 0) {
+          // remove existing filter
+          vm.removeFilter(filter);
+        }
+      });
+
+      filters.forEach(function (filter) {
+        if (vm.state.xf.filters.map(function (d) { return d.id; }).indexOf(filter) < 0) {
+          // add new filter
+          vm.addFilter(filter);
+        }
+      });
+
       this.state.filters = filters;
     },
     selectLayer: function (id) {
@@ -269,7 +302,7 @@ var app = window.app = new Vue({
       console.log('app:selectStates()', states);
       this.xf.setFilter('stusps', states);
       this.state.states = states;
-      this.$set(this.state.xf.filters, 'stusps', states);
+      this.$set(this.state.xf, 'stusps', states);
     },
     selectVariable: function (id) {
       console.log('app:selectVariable()', id);
