@@ -196,7 +196,7 @@ var app = window.app = new Vue({
         vm.selectStates(vm.state.states);
         vm.state.map.getColor = function (id) {
           var value = vm.xf.getAggregationValue(id);
-          return vm.state.map.colorScale(value);
+          return value === null ? '#EEE' : vm.state.map.colorScale(value);
         };
         return true;
       })

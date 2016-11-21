@@ -44,7 +44,7 @@ module.exports = function (data) {
           p.count -= 1;
           p.sum -= v[valueColumn]*v[_areaColumn];
           p.area -= v[_areaColumn];
-          p.mean = p.area >= 0 ? p.sum/p.area : null;
+          p.mean = p.count >= 1 ? p.sum/p.area : null;
         }
         return p;
       },

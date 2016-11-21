@@ -39,7 +39,7 @@
         <select-picker :config="options.variable.config" :options="options.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-picker>
       </div>
       <div class="ice-box">
-        <div class="ice-box-title">State Debug</div>
+        <div class="ice-box-title">Debug</div>
         <div>Layer: {{ state.layer }}</div>
         <div>States: {{ state.states.length > 0 ? state.states.join(', ') : 'None' }}</div>
         <div>Variable: {{ state.variable }}</div>
