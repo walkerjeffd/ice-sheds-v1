@@ -1,18 +1,54 @@
 var Vue = require('vue'),
     Promise = require('bluebird'),
-    topojson = require('topojson-client');
+    topojson = require('topojson-client'),
+    queryString = require('query-string');
 
 Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
 Vue.component('ice-map', require('./components/iceMap'));
 Vue.component('ice-status', require('./components/iceStatus'));
 
-var IceCrossfilter = require('./iceCrossfilter.js');
+var IceCrossfilter = require('./components/iceCrossfilter.js');
+
+var serializeState = function (state) {
+  var obj = {
+    variable: state.variable,
+    layer: state.layer,
+    filters: {
+      charts: [],
+      region: state.filters.region
+    }
+  };
+
+  state.xf.filters.forEach(function (filter) {
+    obj.filters.charts.push({
+      id: filter.id,
+      range: filter.range
+    });
+  });
+
+  // stringify nested objects
+  obj.filters = JSON.stringify(obj.filters);
+
+  return queryString.stringify(obj);
+};
+
+var deserializeState = function (query) {
+  if (!query) return;
+
+  var parsed = queryString.parse(query);
+
+  // parse stringified nested objects
+  if (parsed.filters) parsed.filters = JSON.parse(parsed.filters);
+
+  return parsed;
+};
+
 
 var app = window.app = new Vue({
   el: '#app',
   data: {
-    options: {
+    config: {
       layer: {
         config: {},
         options: []
@@ -22,19 +58,23 @@ var app = window.app = new Vue({
         options: []
       },
       filters: {
-        config: {
-          selectedTextFormat: 'count',
-          countSelectedText: '{0} variables selected'
+        // histogram chart filters
+        charts: {
+          config: {
+            selectedTextFormat: 'count',
+            countSelectedText: '{0} variables selected'
+          },
+          options: []
         },
-        options: []
-      },
-      states: {
-        config: {
-          actionsBox: true,
-          selectedTextFormat: 'count',
-          countSelectedText: '{0} states selected'
-        },
-        options: []
+        // region select filters
+        region: {
+          config: {
+            actionsBox: true,
+            selectedTextFormat: 'count',
+            countSelectedText: '{0} states selected'
+          },
+          options: []
+        }
       },
       map: {
         view: {
@@ -101,7 +141,7 @@ var app = window.app = new Vue({
           url: 'data/huc10.topojson'
         }
       ],
-      states: [
+      regions: [
         { id: 'CT', label: 'Connecticut' },
         { id: 'DE', label: 'Delaware' },
         { id: 'DC', label: 'District of Columbia' },
@@ -265,31 +305,37 @@ var app = window.app = new Vue({
       message: 'Initializing...',
       layer: 'huc8',
       variable: 'forest',
-      filters: ['forest'],
-      states: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA', 'WV'],
+      filters: {
+        charts: ['forest'],
+        region: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA', 'WV']
+      },
       xf: {
         filters: []
       },
       map: {
         aggregationLayer: undefined,
         getColor: function (id) {
-          return Math.random()
+          return Math.random();
         }.bind(this)
       }
     },
   },
   mounted: function () {
     var vm = this;
+
+    var queryState = deserializeState(location.search);
+    vm.setState(queryState);
+console.log('queryState', queryState);
     vm.xf = IceCrossfilter();
 
-    // set up select options
-    vm.options.layer.options = vm.dataset.layers.map(function (d) {
+    // set up select picker options
+    vm.config.layer.options = vm.dataset.layers.map(function (d) {
         return {
           id: d.id,
           label: d.label
         };
       });
-    vm.options.variable.options = vm.dataset.variables.filter(function (d) {
+    vm.config.variable.options = vm.dataset.variables.filter(function (d) {
         return d.aggregation;
       }).map(function (d) {
         return {
@@ -297,13 +343,13 @@ var app = window.app = new Vue({
           label: d.label
         };
       });
-    vm.options.states.options = vm.dataset.states.map(function (d) {
+    vm.config.filters.region.options = vm.dataset.regions.map(function (d) {
       return {
         id: d.id,
         label: d.label
       };
     });
-    vm.options.filters.options = vm.dataset.variables.filter(function (d) {
+    vm.config.filters.charts.options = vm.dataset.variables.filter(function (d) {
         return d.filter;
       }).map(function (d) {
         return {
@@ -318,8 +364,15 @@ var app = window.app = new Vue({
         vm.xf.areaColumn(vm.dataset.columns.area).data(data);
         vm.xf.addCategoricalDim('stusps');
         vm.selectVariable(vm.state.variable);
-        vm.selectStates(vm.state.states);
-        vm.selectFilters(vm.state.filters);
+        vm.selectStates(vm.state.filters.region);
+        vm.selectFilters(vm.state.filters.charts);
+
+        if (queryState && queryState.filters && queryState.filters.charts) {
+          queryState.filters.charts.forEach(function (filter) {
+            filter.range && vm.setFilter(filter.id, filter.range);
+          });
+        }
+
         vm.state.map.getColor = function (id) {
           var value = vm.xf.getAggregationValue(id);
           return value === null ? '#EEE' : vm.state.map.colorScale(value);
@@ -334,7 +387,23 @@ var app = window.app = new Vue({
       });
   },
   methods: {
-    addFilter: function (id) {
+    setState: function (newState) {
+      if (!newState) return;
+
+      var state = this.state;
+
+      state.variable = newState.variable || state.variable;
+      state.layer = newState.layer || state.layer;
+      state.variable = newState.variable || state.variable;
+      if (newState.filters) {
+        state.filters.region = newState.filters.region || state.filters.region;
+
+        if (newState.filters.charts) {
+          state.filters.charts = newState.filters.charts.map(function (d) { return d.id; });
+        }
+      }
+    },
+    addFilter: function (id, range) {
       console.log('app:addFilter()', id);
       var vm = this;
 
@@ -353,17 +422,17 @@ var app = window.app = new Vue({
         getSelectedDim: function () { return; }
       };
 
-      this.xf.addFilterDim(id, variable);
+      this.xf.addFilterDim(id, variable).setFilterDimRange(id, range);
       if (this.state.selected) {
-        this.state.selected.xf.addFilterDim(id, variable);
+        this.state.selected.xf.addFilterDim(id, variable).setFilterDimRange(id, range);
         filter.getSelectedDim = function () {
           return vm.state.selected.xf.getDim(filter.id);
         }
       }
 
       this.state.xf.filters.push(filter);
-      if (this.state.filters.indexOf(id) < 0) {
-        this.state.filters.push(id);
+      if (this.state.filters.charts.indexOf(id) < 0) {
+        this.state.filters.charts.push(id);
       }
     },
     removeFilter: function (id) {
@@ -384,9 +453,9 @@ var app = window.app = new Vue({
 
       this.state.xf.filters.splice(idx, 1);
 
-      idx = this.state.filters.indexOf(id);
+      idx = this.state.filters.charts.indexOf(id);
       if (idx >= 0) {
-        this.state.filters.splice(idx, 1);
+        this.state.filters.charts.splice(idx, 1);
       }
     },
     setFilter: function (id, range) {
@@ -446,7 +515,7 @@ var app = window.app = new Vue({
       var vm = this;
 
       // if filter already exists, remove it
-      this.state.filters.forEach(function (filter) {
+      this.state.filters.charts.forEach(function (filter) {
         if (filters.indexOf(filter) < 0) {
           vm.removeFilter(filter);
         }
@@ -459,7 +528,7 @@ var app = window.app = new Vue({
         }
       });
 
-      this.state.filters = filters;
+      this.state.filters.charts = filters;
     },
     selectLayer: function (id) {
       console.log('app:selectLayer()', id);
@@ -496,7 +565,7 @@ var app = window.app = new Vue({
       this.xf.setCategoricalDimFilter('stusps', states);
       if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter('stusps', states);
 
-      this.state.states = states;
+      this.state.filters.region = states;
       this.$set(this.state.xf, 'stusps', states);
     },
     selectVariable: function (id) {
@@ -527,7 +596,7 @@ var app = window.app = new Vue({
         var xf = this.state.selected.xf = IceCrossfilter().data(subset);
 
         // add categorical dimensions
-        xf.addCategoricalDim('stusps').setCategoricalDimFilter('stusps', this.state.states);
+        xf.addCategoricalDim('stusps').setCategoricalDimFilter('stusps', this.state.filters.region);
 
         // add filter dimensions
         this.state.xf.filters.forEach(function (filter) {
@@ -539,7 +608,7 @@ var app = window.app = new Vue({
       } else if (this.state.selected) {
         console.log('app:selectFeature(' + this.state.selected.id + ') destroy');
         this.state.selected.xf.destroy();
-        this.state.filters.forEach(function (filter) {
+        this.state.filters.charts.forEach(function (filter) {
           filter.getSelectedDim = function () { return; };
         });
         this.$delete(this.state, 'selected');
@@ -547,6 +616,10 @@ var app = window.app = new Vue({
     },
     setStatus: function (message) {
       this.state.message = message;
+    },
+    share: function () {
+      var query = serializeState(this.state);
+      console.log(location.origin + location.pathname + '?' + query);
     },
     updateAggregation: function (layer, variable) {
       console.log('app:updateAggregation()', layer, variable);

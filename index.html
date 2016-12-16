@@ -19,6 +19,7 @@
   <div class="header">
     <span class="brand">SHEDS: Interactive Catchment Explorer</span>
     <div class="pull-right">
+      <a href="#" v-on:click="share">Share</a> |
       <a href="#" data-toggle="modal" data-target="#data-modal">Data Sources</a> |
       <a href="http://ice.ecosheds.org">ICE Home</a> |
       <a href="http://ecosheds.org">SHEDS Home</a>
@@ -28,38 +29,33 @@
     <div class="ice-left-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Aggregation Level</div>
-        <select-picker :config="options.layer.config" :options="options.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id"></select-picker>
+        <select-picker :config="config.layer.config" :options="config.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id"></select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Region Filter</div>
-        <select-picker :config="options.states.config" :options="options.states.options" :selected="state.states" v-on:input="selectStates" label="label" value="id" title="Select states..." multiple="true"></select-picker>
+        <select-picker :config="config.filters.region.config" :options="config.filters.region.options" :selected="state.filters.region" v-on:input="selectStates" label="label" value="id" title="Select states..." multiple="true"></select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Display Variable</div>
-        <select-picker :config="options.variable.config" :options="options.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-picker>
+        <select-picker :config="config.variable.config" :options="config.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
-        <div>Layer: {{ state.layer }}</div>
-        <div>States: {{ state.states.length > 0 ? state.states.join(', ') : 'None' }}</div>
-        <div>Variable: {{ state.variable }}</div>
-        <div>Filters: {{ state.filters.length > 0 ? state.filters.join(', ') : 'None' }}</div>
-        <div>
-          Crossfilter:
-          <pre>{{ state.xf }}</pre>
-        </div>
+<!-- <pre>
+{{state}}
+</pre> -->
       </div>
     </div>
     <div class="ice-right-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Catchment Filters and Histograms</div>
-        <select-picker :config="options.filters.config" :options="options.filters.options" :selected="state.filters" v-on:input="selectFilters" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
+        <select-picker :config="config.filters.charts.config" :options="config.filters.charts.options" :selected="state.filters.charts" v-on:input="selectFilters" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
         <hr>
         <div is="ice-filter" v-for="filter in state.xf.filters" :key="filter.id" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :selected="state.selected" :get-dim="filter.getDim" :get-selected-dim="filter.getSelectedDim" v-on:brush="setFilter" v-on:destroy="removeFilter"></div>
       </div>
     </div>
     <ice-status :message="state.message"></ice-status>
-    <ice-map :center="options.map.view.center" :zoom="options.map.view.zoom" :basemaps="options.map.basemaps" :overlays="options.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-color="state.map.getColor" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
+    <ice-map :center="config.map.view.center" :zoom="config.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-color="state.map.getColor" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
   </div>
 </div>
 

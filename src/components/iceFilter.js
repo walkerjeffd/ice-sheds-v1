@@ -60,6 +60,10 @@ module.exports = {
     };
     this.brush = d3.svg.brush().x(this.scales.x);
 
+    if (this.range) {
+      this.brush.extent(this.range);
+    }
+
     g.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + this.height + ")")
@@ -109,6 +113,9 @@ module.exports = {
     selected: function () {
       console.log('filter(' + this.id + '):watch selected');
       this.render();
+    },
+    range: function () {
+      console.log('filter(' + this.id + '):watch range', this.range);
     }
   },
   methods: {
@@ -147,6 +154,8 @@ module.exports = {
       } else {
         this.svg.selectAll(".selected.bar").datum([]).attr("d", barPath);
       }
+
+      this.drawBrush();
 
       function barPath(groups) {
         var path = [],
