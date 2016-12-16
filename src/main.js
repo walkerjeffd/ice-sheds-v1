@@ -17,6 +17,12 @@ var serializeState = function (state) {
     filters: {
       charts: [],
       region: state.filters.region
+    },
+    map: {
+      view: {
+        center: state.map.view.center,
+        zoom: state.map.view.zoom
+      }
     }
   };
 
@@ -28,7 +34,9 @@ var serializeState = function (state) {
   });
 
   // stringify nested objects
-  obj.filters = JSON.stringify(obj.filters);
+  ['filters', 'map'].forEach(function (key) {
+    obj[key] = JSON.stringify(obj[key]);
+  })
 
   return queryString.stringify(obj);
 };
@@ -39,7 +47,9 @@ var deserializeState = function (query) {
   var parsed = queryString.parse(query);
 
   // parse stringified nested objects
-  if (parsed.filters) parsed.filters = JSON.parse(parsed.filters);
+  ['filters', 'map'].forEach(function (key) {
+    if (parsed[key]) parsed[key] = JSON.parse(parsed[key]);
+  })
 
   return parsed;
 };
@@ -77,10 +87,6 @@ var app = window.app = new Vue({
         }
       },
       map: {
-        view: {
-          center: [42.2, -71.1],
-          zoom: 6
-        },
         basemaps: [
           {
             type: 'bing',
@@ -313,6 +319,10 @@ var app = window.app = new Vue({
         filters: []
       },
       map: {
+        view: {
+          center: [42.2, -71.1],
+          zoom: 6
+        },
         aggregationLayer: undefined,
         getColor: function (id) {
           return Math.random();
@@ -325,7 +335,16 @@ var app = window.app = new Vue({
 
     var queryState = deserializeState(location.search);
     vm.setState(queryState);
-console.log('queryState', queryState);
+
+    if (queryState && queryState.map && queryState.map.view) {
+      if (queryState.map.view.center) {
+        vm.state.map.view.center = queryState.map.view.center;
+      }
+      if (queryState.map.view.zoom) {
+        vm.state.map.view.zoom = queryState.map.view.zoom;
+      }
+    }
+
     vm.xf = IceCrossfilter();
 
     // set up select picker options
@@ -387,6 +406,10 @@ console.log('queryState', queryState);
       });
   },
   methods: {
+    setMapView: function (center, zoom) {
+      if (center) this.state.map.view.center = center;
+      if (zoom) this.state.map.view.zoom = zoom;
+    },
     setState: function (newState) {
       if (!newState) return;
 

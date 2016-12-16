@@ -21,7 +21,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'displayVariable', 'filters', 'selected'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'setView', 'displayVariable', 'filters', 'selected'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -80,12 +80,16 @@ module.exports = {
       vm.disableClick = true;
     })
     leafletMap.on('moveend', function () {
+      vm.setView([leafletMap.getCenter()['lat'], leafletMap.getCenter()['lng']], leafletMap.getZoom());
       moveTimeout = setTimeout(function () {
         vm.disableClick = false;
       }, 100);
     })
 
-    leafletMap.on('zoomend', this.resizeSvg);
+    leafletMap.on('zoomend', function () {
+      vm.setView([leafletMap.getCenter()['lat'], leafletMap.getCenter()['lng']], leafletMap.getZoom());
+      vm.resizeSvg();
+    });
 
     // svg overlay
     this.svg = d3.select(leafletMap.getPanes().overlayPane).append('svg');
@@ -110,6 +114,8 @@ module.exports = {
       // console.log('map:watch filters', vm.filters);
       this.renderFill();
     }, {deep: true});
+
+    this.leafletMap = leafletMap;
   },
   watch: {
     aggregationLayer: function (n, o) {
@@ -127,9 +133,23 @@ module.exports = {
     selected: function (n, o) {
       console.log('map:watch selected', (n ? n.id : 'none'));
       this.renderAll();
+    },
+    center: function (n, o) {
+      console.log('map:watch center', n);
+      this.updateView(this.center, this.zoom);
+    },
+    zoom: function (n, o) {
+      console.log('map:watch zoom', n);
+      this.updateView(this.center, this.zoom);
     }
   },
   methods: {
+    updateView: function (center, zoom) {
+      if (this.leafletMap.getCenter().lat !== center[0] || this.leafletMap.getCenter().lng !== center[1] || this.leafletMap.getZoom() !== zoom) {
+        console.log('map:updateView()', center, zoom);
+        this.leafletMap.setView(center, zoom);
+      }
+    },
     resizeSvg: function () {
       if (this.data.aggregationLayer) {
         var bounds = this.path.bounds(this.data.aggregationLayer),

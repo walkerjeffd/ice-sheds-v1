@@ -41,9 +41,10 @@
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
-<!-- <pre>
-{{state}}
-</pre> -->
+<pre>
+zoom: {{state.map.view.zoom}}
+center: {{state.map.view.center}}
+</pre>
       </div>
     </div>
     <div class="ice-right-sidebar">
@@ -55,7 +56,7 @@
       </div>
     </div>
     <ice-status :message="state.message"></ice-status>
-    <ice-map :center="config.map.view.center" :zoom="config.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-color="state.map.getColor" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
+    <ice-map :center="state.map.view.center" :zoom="state.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-color="state.map.getColor" :set-view="setMapView" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
   </div>
 </div>
 
