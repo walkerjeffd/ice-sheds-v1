@@ -1,7 +1,8 @@
 var Vue = require('vue'),
     Promise = require('bluebird'),
     topojson = require('topojson-client'),
-    queryString = require('query-string');
+    queryString = require('query-string'),
+    Clipboard = require('clipboard');
 
 Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
@@ -58,6 +59,7 @@ var deserializeState = function (query) {
 var app = window.app = new Vue({
   el: '#app',
   data: {
+    shareUrl: '',
     config: {
       layer: {
         config: {},
@@ -332,6 +334,8 @@ var app = window.app = new Vue({
   },
   mounted: function () {
     var vm = this;
+
+    new Clipboard('.btn-copy');
 
     var queryState = deserializeState(location.search);
     vm.setState(queryState);
@@ -641,8 +645,12 @@ var app = window.app = new Vue({
       this.state.message = message;
     },
     share: function () {
-      var query = serializeState(this.state);
-      console.log(location.origin + location.pathname + '?' + query);
+      var query = serializeState(this.state),
+          url = location.origin + location.pathname + '?' + query;
+
+      this.shareUrl = url;
+
+      $('#modal-share').modal('show')
     },
     updateAggregation: function (layer, variable) {
       console.log('app:updateAggregation()', layer, variable);
