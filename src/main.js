@@ -14,6 +14,7 @@ Vue.component('ice-status', require('./components/iceStatus'));
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
 var serialize = function (state) {
+  console.log(state.selected);
   var obj = {
     configUrl: state.configUrl,
     variable: state.variable,
@@ -29,6 +30,10 @@ var serialize = function (state) {
       }
     }
   };
+
+  if (state.selected) {
+    obj.selectedId = state.selected.id;
+  }
 
   state.xf.filters.forEach(function (filter) {
     obj.filters.charts.push({
@@ -214,7 +219,19 @@ var app = window.app = new Vue({
             });
           }
 
-          return vm.selectLayer(vm.state.layer);
+          return vm.selectLayer(vm.state.layer)
+            .then(function () {
+              // select feature from query
+              if (query && query.selectedId) {
+                var features = vm.state.map.aggregationLayer.features.filter(function (d) {
+                  return d.id === query.selectedId;
+                });
+
+                if (features.length > 0) {
+                  vm.selectFeature(features[0]);
+                }
+              }
+            });
         })
         .then(function () {
           vm.setStatus();
