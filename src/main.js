@@ -149,22 +149,25 @@ var app = window.app = new Vue({
           url: 'data/huc10.topojson'
         }
       ],
-      regions: [
-        { id: 'CT', label: 'Connecticut' },
-        { id: 'DE', label: 'Delaware' },
-        { id: 'DC', label: 'District of Columbia' },
-        { id: 'ME', label: 'Maine' },
-        { id: 'MD', label: 'Maryland' },
-        { id: 'MA', label: 'Massachusetts' },
-        { id: 'NH', label: 'New Hampshire' },
-        { id: 'NJ', label: 'New Jersey' },
-        { id: 'NY', label: 'New York' },
-        { id: 'PA', label: 'Pennsylvania' },
-        { id: 'RI', label: 'Rhode Island' },
-        { id: 'VT', label: 'Vermont' },
-        { id: 'VA', label: 'Virginia' },
-        { id: 'WV', label: 'West Virginia' }
-      ],
+      regions: {
+        id: 'stusps',
+        options: [
+          { id: 'CT', label: 'Connecticut' },
+          { id: 'DE', label: 'Delaware' },
+          { id: 'DC', label: 'District of Columbia' },
+          { id: 'ME', label: 'Maine' },
+          { id: 'MD', label: 'Maryland' },
+          { id: 'MA', label: 'Massachusetts' },
+          { id: 'NH', label: 'New Hampshire' },
+          { id: 'NJ', label: 'New Jersey' },
+          { id: 'NY', label: 'New York' },
+          { id: 'PA', label: 'Pennsylvania' },
+          { id: 'RI', label: 'Rhode Island' },
+          { id: 'VT', label: 'Vermont' },
+          { id: 'VA', label: 'Virginia' },
+          { id: 'WV', label: 'West Virginia' }
+        ]
+      },
       variables: [
         {
           id: "elevation",
@@ -366,7 +369,7 @@ var app = window.app = new Vue({
           label: d.label
         };
       });
-    vm.config.filters.region.options = vm.dataset.regions.map(function (d) {
+    vm.config.filters.region.options = vm.dataset.regions.options.map(function (d) {
       return {
         id: d.id,
         label: d.label
@@ -385,7 +388,7 @@ var app = window.app = new Vue({
     vm.fetchDataset(vm.dataset)
       .then(function (data) {
         vm.xf.areaColumn(vm.dataset.columns.area).data(data);
-        vm.xf.addCategoricalDim('stusps');
+        vm.xf.addCategoricalDim(vm.dataset.regions.id);
         vm.selectVariable(vm.state.variable);
         vm.selectStates(vm.state.filters.region);
         vm.selectFilters(vm.state.filters.charts);
@@ -589,11 +592,11 @@ var app = window.app = new Vue({
     },
     selectStates: function (states) {
       console.log('app:selectStates()', states);
-      this.xf.setCategoricalDimFilter('stusps', states);
-      if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter('stusps', states);
+      this.xf.setCategoricalDimFilter(this.dataset.regions.id, states);
+      if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter(this.dataset.regions.id, states);
 
       this.state.filters.region = states;
-      this.$set(this.state.xf, 'stusps', states);
+      this.$set(this.state.xf, this.dataset.regions.id, states);
     },
     selectVariable: function (id) {
       console.log('app:selectVariable()', id);
@@ -623,7 +626,8 @@ var app = window.app = new Vue({
         var xf = this.state.selected.xf = IceCrossfilter().data(subset);
 
         // add categorical dimensions
-        xf.addCategoricalDim('stusps').setCategoricalDimFilter('stusps', this.state.filters.region);
+        xf.addCategoricalDim(vm.dataset.regions.id)
+          .setCategoricalDimFilter(vm.dataset.regions.id, this.state.filters.region);
 
         // add filter dimensions
         this.state.xf.filters.forEach(function (filter) {
