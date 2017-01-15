@@ -540,7 +540,7 @@ var app = window.app = new Vue({
       } else if (this.state.selected) {
         console.log('app:selectFeature(' + this.state.selected.id + ') destroy');
         this.state.selected.xf.destroy();
-        this.state.filters.charts.forEach(function (filter) {
+        this.state.xf.filters.forEach(function (filter) {
           filter.getSelectedDim = function () { return; };
         });
         this.$delete(this.state, 'selected');
