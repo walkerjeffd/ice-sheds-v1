@@ -158,7 +158,16 @@ var app = window.app = new Vue({
     vm.xf = IceCrossfilter();
 
     // load dataset
-    vm.loadDataset('/data/dataset/sheds-default.json');
+    vm.setStatus('Loading dataset...');
+    vm.loadDataset('/data/dataset/sheds-default.json')
+      .then(function () {
+        vm.setStatus();
+      })
+      .catch(function (err) {
+        console.error(err);
+        vm.setStatus('Error');
+        alert('Failed to load dataset');
+      });
   },
   methods: {
     loadDataset: function (url) {
@@ -166,7 +175,7 @@ var app = window.app = new Vue({
 
       var vm = this;
 
-      vm.fetchConfig(url)
+      return vm.fetchConfig(url)
         .then(function (config) {
           vm.$set(vm.dataset, 'config', config);
           return vm.dataset.config;
@@ -203,10 +212,6 @@ var app = window.app = new Vue({
           }
 
           return vm.selectLayer(vm.state.layer);
-        })
-        .catch(function (err) {
-          console.error(err);
-          alert('Failed to load dataset');
         });
     },
     fetchConfig: function (url) {
@@ -270,7 +275,6 @@ var app = window.app = new Vue({
       console.log('app:fetchDataset()', config);
       var vm = this;
 
-      vm.setStatus('Loading dataset...');
       return new Promise(function (resolve, reject) {
         d3.csv(config.data.url, function(err, data) {
           if (err) return reject(err);
@@ -288,7 +292,6 @@ var app = window.app = new Vue({
             d.huc4 = d.huc12.substr(0, 4);
           });
 
-          vm.setStatus('Ready!');
           resolve(data);
         });
       });
@@ -452,7 +455,7 @@ var app = window.app = new Vue({
           vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
 
-          vm.setStatus('Ready!');
+          vm.setStatus();
           return resolve(geojson);
         });
       });
@@ -513,7 +516,7 @@ var app = window.app = new Vue({
       }
     },
     setStatus: function (message) {
-      this.state.message = message;
+      this.state.message = message || 'Ready!';
     },
     share: function () {
       var query = serializeState(this.state),
