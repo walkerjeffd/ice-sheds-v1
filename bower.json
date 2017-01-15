@@ -20,6 +20,7 @@
     "leaflet": "^1.0.1",
     "d3": "~3",
     "leaflet-bing-layer": "^3.0.1",
-    "jquery-ui-slider": "*"
+    "jquery-ui-slider": "*",
+    "font-awesome": "^4.7.0"
   }
 }

@@ -1,4 +1,49 @@
-/* LEAFLET MAP ------------------------------------------------------------- */
+/* Loading Overlay */
+.ice-loading {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding-top: 50px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  color: #f5f5f5;
+}
+
+/* Header */
+.ice-header {
+  position: fixed;
+  width: 100%;
+  height: 60px;
+  top: 0;
+  left: 0;
+  background: rgba(40, 40, 40, 0.5);
+  color: white;
+  padding: 10px;
+  font-family: 'Open Sans', "proxima-nova-alt", Helvetica, Arial, sans-serif;
+  z-index: 2000;
+}
+
+.ice-header .brand {
+  font-variant: small-caps;
+  font-size: 24pt;
+}
+
+.ice-header a {
+  color: white;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  line-height: 1.5em;
+}
+
+.ice-header a:visited {
+  color: white;
+}
+
+
+/* Leaflet Map */
 
 .leaflet-left {
   margin-left: 325px;
@@ -11,6 +56,12 @@
 .ice-map {
   width: 100%;
   height: 100%;
+}
+
+.ice-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 /* Tooltip */
@@ -159,18 +210,6 @@ a {
   opacity: 0.2;
 }
 
-.loading {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  padding-top: 50px;
-  z-index: 1000;
-  background: rgba(200, 200, 200, 0.5);
-  text-align: center;
-}
-
 .btn-tooltip {
   display: inline-block;
 }
@@ -183,21 +222,6 @@ a {
   width: 107px;
 }
 
-.header a {
-  color: white;
-  font-weight: bold;
-  letter-spacing: 0.1em;
-  line-height: 1.5em;
-}
-
-.header a:visited {
-  color: white;
-}
-
-.map-container {
-  width: 100%;
-  height: 100%;
-}
 
 
 .huc-container {
@@ -548,24 +572,6 @@ aside {
 
 .hidden {
   display: none;
-}
-
-.header {
-  position: fixed;
-  width: 100%;
-  height: 60px;
-  top: 0;
-  left: 0;
-  background: rgba(40, 40, 40, 0.5);
-  color: white;
-  padding: 10px;
-  font-family: 'Open Sans', "proxima-nova-alt", Helvetica, Arial, sans-serif;
-  z-index: 2000;
-}
-
-.header .brand {
-  font-variant: small-caps;
-  font-size: 24pt;
 }
 
 

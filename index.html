@@ -9,6 +9,7 @@
   <link href='http://fonts.googleapis.com/css?family=Open+Sans:600' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="bower_components/bootstrap-select/dist/css/bootstrap-select.min.css">
+  <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">
   <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css">
   <link rel="stylesheet" href="css/main.css">
@@ -16,7 +17,7 @@
 
 <body>
 <div class="full" id="app">
-  <div class="header">
+  <div class="ice-header">
     <span class="brand">SHEDS: Interactive Catchment Explorer</span>
     <div class="pull-right">
       <a href="#" v-on:click="share">Share</a> |
@@ -25,7 +26,7 @@
       <a href="http://ecosheds.org">SHEDS Home</a>
     </div>
   </div>
-  <div class="map-container">
+  <div class="ice-container">
     <div class="ice-left-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Aggregation Level</div>
@@ -62,6 +63,10 @@ filters: {{state.filters.charts}}
     </div>
     <ice-status :message="state.message"></ice-status>
     <ice-map :center="state.map.view.center" :zoom="state.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-color="state.map.getColor" :set-view="setMapView" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
+    <div class="ice-loading" v-show="show.loading">
+      <h1>Loading</h1>
+      <div><i class="fa fa-spinner fa-spin fa-5x fa-fw"></i></div>
+    </div>
   </div>
 
   <div class="modal fade" tabindex="-1" role="dialog" id="modal-share">

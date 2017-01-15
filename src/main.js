@@ -62,6 +62,9 @@ var app = window.app = new Vue({
   el: '#app',
   data: {
     shareUrl: '',
+    show: {
+      loading: true
+    },
     dataset: {},
     config: {
       layer: {
@@ -167,6 +170,9 @@ var app = window.app = new Vue({
         console.error(err);
         vm.setStatus('Error');
         alert('Failed to load dataset');
+      })
+      .finally(function () {
+        vm.show.loading = false;
       });
   },
   methods: {
