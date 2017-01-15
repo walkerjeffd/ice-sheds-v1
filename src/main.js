@@ -161,25 +161,17 @@ var app = window.app = new Vue({
     vm.xf = IceCrossfilter();
 
     // load dataset
-    vm.setStatus('Loading dataset...');
-    vm.loadDataset('/data/dataset/sheds-default.json')
-      .then(function () {
-        vm.setStatus();
-      })
-      .catch(function (err) {
-        console.error(err);
-        vm.setStatus('Error');
-        alert('Failed to load dataset');
-      })
-      .finally(function () {
-        vm.show.loading = false;
-      });
+    // vm.loadDataset('/data/dataset/sheds-default.json')
+    vm.loadDataset('/data/dataset/sheds-geo.json');
   },
   methods: {
     loadDataset: function (url) {
       console.log('app:loadDataset()', url);
 
       var vm = this;
+
+      vm.setStatus('Loading dataset...');
+      vm.show.loading = true;
 
       return vm.fetchConfig(url)
         .then(function (config) {
@@ -218,6 +210,17 @@ var app = window.app = new Vue({
           }
 
           return vm.selectLayer(vm.state.layer);
+        })
+        .then(function () {
+          vm.setStatus();
+        })
+        .catch(function (err) {
+          console.error(err);
+          vm.setStatus('Error');
+          alert('Failed to load dataset');
+        })
+        .finally(function () {
+          vm.show.loading = false;
         });
     },
     fetchConfig: function (url) {
