@@ -1,9 +1,11 @@
 var Vue = require('vue'),
+    VueResource = require('vue-resource'),
     Promise = require('bluebird'),
     topojson = require('topojson-client'),
     queryString = require('query-string'),
     Clipboard = require('clipboard');
 
+Vue.use(VueResource);
 Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
 Vue.component('ice-map', require('./components/iceMap'));
@@ -60,6 +62,7 @@ var app = window.app = new Vue({
   el: '#app',
   data: {
     shareUrl: '',
+    dataset: {},
     config: {
       layer: {
         config: {},
@@ -70,7 +73,6 @@ var app = window.app = new Vue({
         options: []
       },
       filters: {
-        // histogram chart filters
         charts: {
           config: {
             selectedTextFormat: 'count',
@@ -78,7 +80,6 @@ var app = window.app = new Vue({
           },
           options: []
         },
-        // region select filters
         region: {
           config: {
             actionsBox: true,
@@ -124,201 +125,13 @@ var app = window.app = new Vue({
         ]
       },
     },
-    dataset: {
-      url: 'https://s3.amazonaws.com/sheds-ice/dataset-20160322-1.csv',
-      columns: {
-        area: 'AreaSqKM',
-        id: 'featureid'
-      },
-      layers: [
-        {
-          id: 'huc4',
-          label: 'HUC4',
-          url: 'data/huc4.topojson'
-        }, {
-          id: 'huc6',
-          label: 'HUC6',
-          url: 'data/huc6.topojson'
-        }, {
-          id: 'huc8',
-          label: 'HUC8',
-          url: 'data/huc8.topojson'
-        }, {
-          id: 'huc10',
-          label: 'HUC10',
-          url: 'data/huc10.topojson'
-        }
-      ],
-      regions: {
-        id: 'stusps',
-        options: [
-          { id: 'CT', label: 'Connecticut' },
-          { id: 'DE', label: 'Delaware' },
-          { id: 'DC', label: 'District of Columbia' },
-          { id: 'ME', label: 'Maine' },
-          { id: 'MD', label: 'Maryland' },
-          { id: 'MA', label: 'Massachusetts' },
-          { id: 'NH', label: 'New Hampshire' },
-          { id: 'NJ', label: 'New Jersey' },
-          { id: 'NY', label: 'New York' },
-          { id: 'PA', label: 'Pennsylvania' },
-          { id: 'RI', label: 'Rhode Island' },
-          { id: 'VT', label: 'Vermont' },
-          { id: 'VA', label: 'Virginia' },
-          { id: 'WV', label: 'West Virginia' }
-        ]
-      },
-      variables: [
-        {
-          id: "elevation",
-          label: "Elevation (m)",
-          aggregation: true,
-          filter: true,
-          min: 0,
-          max: 1000,
-          scale: 1,
-          interval: 25,
-          format: ',.1f'
-        }, {
-          id: "forest",
-          label: "Forest Cover (%)",
-          aggregation: true,
-          filter: true,
-          min: 0,
-          max: 1,
-          scale: 100,
-          interval: 0.025,
-          format: '%'
-        }, {
-          "id": "agriculture",
-          "label": "Agriculture Cover (%)",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 1,
-          "interval": 0.025,
-          "scale": 100,
-          "format": "%"
-        }, {
-          "id": "summer_prcp_mm",
-          "label": "Mean Summer Precip (mm/mon)",
-          "aggregation": true,
-          "filter": true,
-          "min": 70,
-          "max": 230,
-          "interval": 4,
-          "scale": 1,
-          "format": ",.1f"
-        }, {
-          "id": "meanSummerTemp",
-          "label": "Mean Summer Temp (C)",
-          "aggregation": true,
-          "filter": true,
-          "min": 14,
-          "max": 24,
-          "interval": 0.25,
-          "scale": 1,
-          "format": ",.1f"
-        }, {
-          "id": "meanDays_18",
-          "label": "Mean Days per Year > 18 C",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 240,
-          "interval": 6,
-          "scale": 1,
-          "format": ",.1f"
-        }, {
-          "id": "meanDays_22",
-          "label": "Mean Days per Year > 22 C",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 60,
-          "interval": 1.5,
-          "scale": 1,
-          "format": ",.0f"
-        }, {
-          "id": "occ_current",
-          "label": "Probability of Brook Trout Occupancy",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 1,
-          "interval": 0.025,
-          "scale": 1,
-          "format": "%"
-        }, {
-          "id": "max_temp_0_3",
-          "label": "Threshold Temp (C) for 30% Occupancy",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 6,
-          "interval": 0.15,
-          "scale": 1,
-          "format": ".2f"
-        }, {
-          "id": "max_temp_0_5",
-          "label": "Threshold Temp (C) for 50% Occupancy",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 6,
-          "interval": 0.15,
-          "scale": 1,
-          "format": ".2f"
-        }, {
-          "id": "max_temp_0_7",
-          "label": "Threshold Temp (C) for 70% Occupancy",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 6,
-          "interval": 0.15,
-          "scale": 1,
-          "format": ".2f"
-        }, {
-          "id": "plus2",
-          "label": "Occupancy Prob with 2 C Incr. in July Temp",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 1,
-          "interval": 0.025,
-          "scale": 1,
-          "format": "%"
-        }, {
-          "id": "plus4",
-          "label": "Occupancy Prob with 4 C Incr. in July Temp",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 1,
-          "interval": 0.025,
-          "scale": 1,
-          "format": "%"
-        }, {
-          "id": "plus6",
-          "label": "Occupancy Prob with 6 C Incr. in July Temp",
-          "aggregation": true,
-          "filter": true,
-          "min": 0,
-          "max": 1,
-          "interval": 0.025,
-          "scale": 1,
-          "format": "%"
-        }
-      ]
-    },
     state: {
       message: 'Initializing...',
-      layer: 'huc8',
-      variable: 'forest',
+      layer: null,
+      variable: null,
       filters: {
-        charts: ['forest'],
-        region: ['CT', 'DE', 'DC', 'ME', 'MD', 'MA', 'NH', 'NJ', 'NY', 'PA', 'RI', 'VT', 'VA', 'WV']
+        charts: [],
+        region: []
       },
       xf: {
         filters: []
@@ -341,30 +154,94 @@ var app = window.app = new Vue({
     // initialize share copy-to-clipboard button
     new Clipboard('.btn-copy');
 
-    // parse URL query string and update state
-    var queryState = deserializeState(location.search);
-    vm.setState(queryState);
-
     // initialize crossfilter
     vm.xf = IceCrossfilter();
 
-    // select dataset
-    vm.selectDataset();
+    // load dataset
+    vm.loadDataset('/data/dataset/sheds-default.json');
   },
   methods: {
-    selectDataset: function (url) {
-      console.log('app:selectDataset()', url);
+    loadDataset: function (url) {
+      console.log('app:loadDataset()', url);
+
+      var vm = this;
+
+      vm.fetchConfig(url)
+        .then(function (config) {
+          vm.$set(vm.dataset, 'config', config);
+          return vm.dataset.config;
+        })
+        .then(vm.loadConfig)
+        .then(vm.fetchDataset)
+        .then(function (data) {
+          var config = vm.dataset.config;
+
+          vm.xf.areaColumn(config.columns.area)
+            .data(data)
+            .addCategoricalDim(config.regions.id);
+
+          vm.state.map.getColor = function (id) {
+            var value = vm.xf.getAggregationValue(id);
+            return value === null ? '#EEE' : vm.state.map.colorScale(value);
+          };
+
+          vm.updateState(config.state);
+          var queryState = deserializeState(location.search);
+          vm.updateState(queryState);
+
+          vm.selectVariable(vm.state.variable);
+          vm.selectStates(vm.state.filters.region);
+          vm.selectFilters(vm.state.filters.charts);
+
+          // update filter ranges from queryState
+          // b/c state.filters.charts does not include filter ranges
+          // so ranges are not set in selectFilters()
+          if (queryState && queryState.filters && queryState.filters.charts) {
+            queryState.filters.charts.forEach(function (filter) {
+              filter.range && vm.setFilter(filter.id, filter.range);
+            });
+          }
+
+          return vm.selectLayer(vm.state.layer);
+        })
+        .catch(function (err) {
+          console.error(err);
+          alert('Failed to load dataset');
+        });
+    },
+    fetchConfig: function (url) {
+      console.log('app:fetchConfig()', url);
+
+      var vm = this;
+
+      return vm.$http.get(url)
+        .then(function (response) {
+          if (!response.body) throw new Error('Failed to fetch dataset configuration file (empty response)');
+
+          vm.$set(vm.dataset, 'url', url);
+
+          var datasetConfig = response.body;
+
+          return datasetConfig;
+        })
+        .catch(function (response) {
+          console.error(response);
+          throw new Error('Failed to fetch dataset configuration file (server error)')
+        });
+    },
+    loadConfig: function (config) {
+      console.log('app:loadConfig()');
 
       var vm = this;
 
       // initialize select picker options
-      vm.config.layer.options = vm.dataset.layers.map(function (d) {
+      vm.config.layer.options = config.layers.map(function (d) {
           return {
             id: d.id,
             label: d.label
           };
         });
-      vm.config.variable.options = vm.dataset.variables.filter(function (d) {
+      vm.config.variable.options = config.variables.filter(function (d) {
           return d.aggregation;
         }).map(function (d) {
           return {
@@ -372,13 +249,13 @@ var app = window.app = new Vue({
             label: d.label
           };
         });
-      vm.config.filters.region.options = vm.dataset.regions.options.map(function (d) {
+      vm.config.filters.region.options = config.regions.options.map(function (d) {
         return {
           id: d.id,
           label: d.label
         };
       });
-      vm.config.filters.charts.options = vm.dataset.variables.filter(function (d) {
+      vm.config.filters.charts.options = config.variables.filter(function (d) {
           return d.filter;
         }).map(function (d) {
           return {
@@ -387,42 +264,46 @@ var app = window.app = new Vue({
           };
         });
 
-      // fetch dataset and run application
-      vm.fetchDataset(vm.dataset)
-        .then(function (data) {
-          vm.xf.areaColumn(vm.dataset.columns.area).data(data);
-          vm.xf.addCategoricalDim(vm.dataset.regions.id);
-          vm.selectVariable(vm.state.variable);
-          vm.selectStates(vm.state.filters.region);
-          vm.selectFilters(vm.state.filters.charts);
+      return config;
+    },
+    fetchDataset: function (config) {
+      console.log('app:fetchDataset()', config);
+      var vm = this;
 
-          if (queryState && queryState.filters && queryState.filters.charts) {
-            queryState.filters.charts.forEach(function (filter) {
-              filter.range && vm.setFilter(filter.id, filter.range);
+      vm.setStatus('Loading dataset...');
+      return new Promise(function (resolve, reject) {
+        d3.csv(config.data.url, function(err, data) {
+          if (err) return reject(err);
+
+          data.forEach(function(d) {
+            config.variables.forEach(function(v) {
+              d[v.id] = d[v.id] === "" ? null : +d[v.id]/v.scale;
             });
-          }
 
-          vm.state.map.getColor = function (id) {
-            var value = vm.xf.getAggregationValue(id);
-            return value === null ? '#EEE' : vm.state.map.colorScale(value);
-          };
-        })
-        .then(function () {
-          return vm.selectLayer(vm.state.layer);
-        })
-        .catch(function (err) {
-          console.error(err);
-          alert('Unable to initialize');
+            d[config.columns.area] = +d[config.columns.area];
+
+            d.huc10 = d.huc12.substr(0, 10);
+            d.huc8 = d.huc12.substr(0, 8);
+            d.huc6 = d.huc12.substr(0, 6);
+            d.huc4 = d.huc12.substr(0, 4);
+          });
+
+          vm.setStatus('Ready!');
+          resolve(data);
         });
+      });
     },
     setMapView: function (center, zoom) {
       if (center) this.state.map.view.center = center;
       if (zoom) this.state.map.view.zoom = zoom;
     },
-    setState: function (newState) {
+    updateState: function (newState) {
       if (!newState) return;
 
-      var state = this.state;
+      console.log('app:updateState()', newState);
+
+      var state = this.state,
+          vm = this;
 
       state.variable = newState.variable || state.variable;
       state.layer = newState.layer || state.layer;
@@ -521,36 +402,9 @@ var app = window.app = new Vue({
       this.$set(this.state.xf.filters[idx], 'range', range);
     },
     getVariable: function (id) {
-      return this.dataset.variables.filter(function (d) {
+      return this.dataset.config.variables.filter(function (d) {
         return d.id == id;
       })[0]
-    },
-    fetchDataset: function (dataset) {
-      console.log('app:fetchDataset()', dataset);
-      var vm = this;
-
-      vm.setStatus('Loading dataset...');
-      return new Promise(function (resolve, reject) {
-        d3.csv(dataset.url, function(err, data) {
-          if (err) return reject(err);
-
-          data.forEach(function(d) {
-            dataset.variables.forEach(function(v) {
-              d[v.id] = d[v.id] === "" ? null : +d[v.id]/v.scale;
-            });
-
-            d[dataset.columns.area] = +d[dataset.columns.area];
-
-            d.huc10 = d.huc12.substr(0, 10);
-            d.huc8 = d.huc12.substr(0, 8);
-            d.huc6 = d.huc12.substr(0, 6);
-            d.huc4 = d.huc12.substr(0, 4);
-          });
-
-          vm.setStatus('Ready!');
-          resolve(data);
-        });
-      });
     },
     selectFilters: function (filters) {
       console.log('app:selectFilters()', filters);
@@ -566,6 +420,7 @@ var app = window.app = new Vue({
       // if filter does not exist, add it
       filters.forEach(function (filter) {
         if (vm.state.xf.filters.map(function (d) { return d.id; }).indexOf(filter) < 0) {
+          console.log(filter);
           vm.addFilter(filter);
         }
       });
@@ -576,7 +431,7 @@ var app = window.app = new Vue({
       console.log('app:selectLayer()', id);
       var vm = this;
 
-      var layer = vm.dataset.layers.filter(function (d) {
+      var layer = vm.dataset.config.layers.filter(function (d) {
         return d.id === id;
       })[0];
 
@@ -604,11 +459,11 @@ var app = window.app = new Vue({
     },
     selectStates: function (states) {
       console.log('app:selectStates()', states);
-      this.xf.setCategoricalDimFilter(this.dataset.regions.id, states);
-      if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter(this.dataset.regions.id, states);
+      this.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
+      if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
 
       this.state.filters.region = states;
-      this.$set(this.state.xf, this.dataset.regions.id, states);
+      this.$set(this.state.xf, this.dataset.config.regions.id, states);
     },
     selectVariable: function (id) {
       console.log('app:selectVariable()', id);
@@ -638,8 +493,8 @@ var app = window.app = new Vue({
         var xf = this.state.selected.xf = IceCrossfilter().data(subset);
 
         // add categorical dimensions
-        xf.addCategoricalDim(vm.dataset.regions.id)
-          .setCategoricalDimFilter(vm.dataset.regions.id, this.state.filters.region);
+        xf.addCategoricalDim(vm.dataset.config.regions.id)
+          .setCategoricalDimFilter(vm.dataset.config.regions.id, this.state.filters.region);
 
         // add filter dimensions
         this.state.xf.filters.forEach(function (filter) {

@@ -29,7 +29,7 @@
     <div class="ice-left-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Aggregation Level</div>
-        <select-picker :config="config.layer.config" :options="config.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id"></select-picker>
+        <select-picker :config="config.layer.config" :options="config.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id" title="Select layer..."></select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Region Filter</div>
@@ -41,9 +41,14 @@
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
+<!-- <pre>
+map: {{state.map.view}}
+layer: {{state.layer}}
+variable: {{state.variable}}
+region: {{state.filters.region}}
+</pre> -->
 <pre>
-zoom: {{state.map.view.zoom}}
-center: {{state.map.view.center}}
+filters: {{state.filters.charts}}
 </pre>
       </div>
     </div>

@@ -20,9 +20,9 @@ module.exports = {
       });
   },
   updated: function () {
-    $(this.$el).selectpicker('refresh');
+    $(this.$el).selectpicker('val', this.selected).selectpicker('refresh');
   },
   destroyed: function () {
-    $(this.$el).off().selectpicker('destroy')
+    $(this.$el).off().selectpicker('destroy');
   }
 };
