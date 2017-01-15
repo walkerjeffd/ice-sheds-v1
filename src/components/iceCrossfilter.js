@@ -1,7 +1,7 @@
 var crossfilter = require('crossfilter');
 
 module.exports = function (data) {
-  var xf = {}, _dims = {}, _data, _area;
+  var xf = {}, _dims = {}, _data, _area, _stats;
 
   xf.data = function (_) {
     if (!arguments.length) return _data;
@@ -17,7 +17,7 @@ module.exports = function (data) {
   }
 
   xf.setAggregation = function (key, value) {
-    console.log('xf:setAggregation()', key, value);
+    console.log('xf:setAggregation(%s, %s)', key, value);
 
     if (xf.agg && xf.agg.dim) {
       xf.agg.dim.dispose();
@@ -62,6 +62,8 @@ module.exports = function (data) {
     xf.agg.values = {};
 
     updateValues();
+
+    return xf;
   }
 
   xf.getAggregationValue = function (id) {
@@ -99,7 +101,7 @@ module.exports = function (data) {
   }
 
   xf.addFilterDim = function (id, variable) {
-    console.log('xf:addFilterDim()', id);
+    console.log('xf:addFilterDim(%s)', id);
 
     if (_dims[id]) {
       console.error('filterDim already exists:', id);
@@ -120,7 +122,7 @@ module.exports = function (data) {
   }
 
   xf.removeFilterDim = function (id) {
-    console.log('xf:removeFilterDim()', id);
+    console.log('xf:removeFilterDim(%s)', id);
 
     if (!_dims[id]) {
       console.error('filterDim does not exist:', id);
@@ -177,8 +179,86 @@ module.exports = function (data) {
     xf.all.dispose();
   }
 
+  xf.updateStats = function (key, variables) {
+    // compute area weighted mean of all variables by column key
+    console.log('xf:updateStats2(%s)', key, variables);
+
+    var areaKey = _area,
+        data = _data;
+
+    var variableKeys = variables.map(function(d) { return d.id; })
+
+    var ndx = crossfilter(data);
+    var dim = ndx.dimension(function (d) {
+      return d[key];
+    });
+
+    var group = dim.group().reduce(
+      function reduceAdd(p, v) {
+        p.area += v[areaKey];
+        p.count += 1;
+        variableKeys.forEach(function (key) {
+          if (v[key] != null) {
+            p.variables[key].count += 1;
+            p.variables[key].area += v[areaKey];
+            p.variables[key].sum += v[key]*v[areaKey];
+            p.variables[key].mean = p.variables[key].count >= 1 ? p.variables[key].sum/p.variables[key].area : null;
+          }
+        });
+        return p ;
+      },
+      function reduceRemove(p, v) {
+        p.area -= v[areaKey];
+        p.count -= 1;
+        variableKeys.forEach(function (key) {
+          if (v[key] != null) {
+            p.variables[key].count -= 1;
+            p.variables[key].area -= v[areaKey];
+            p.variables[key].sum -= v[key]*v[areaKey];
+            p.variables[key].mean = p.variables[key].count >= 1 ? p.variables[key].sum/p.variables[key].area : null;
+          }
+        });
+        return p;
+      },
+      function reduceInit(p, v) {
+        var variableKeys = variables.map(function(d) { return d.id; }),
+            initial = {};
+
+        initial.area = 0;
+        initial.count = 0;
+        initial.variables = {};
+        variableKeys.forEach(function (key) {
+          initial.variables[key] = {
+            count: 0,
+            area: 0,
+            sum: 0,
+            mean: 0
+          };
+        });
+        return initial;
+      }
+    );
+
+
+    _stats = {};
+    group.all().forEach(function(d) {
+      _stats[d.key] = d.value;
+    });
+
+    dim.dispose();
+    group.dispose();
+    delete ndx;
+
+    console.log('xf:updateStats2(%s) done', key);
+  }
+
+
+  xf.getStatsById = function (id) {
+    return _stats[id];
+  }
+
   function loadData (data) {
-    console.log('xf:loadData() length=' + data.length);
+    console.log('xf:loadData(n=%s)' + data.length);
     xf.ndx = crossfilter(data);
     xf.all = xf.ndx.groupAll();
 

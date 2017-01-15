@@ -207,12 +207,12 @@ var app = window.app = new Vue({
           vm.updateState(query);
 
           vm.selectVariable(vm.state.variable);
-          vm.selectStates(vm.state.filters.region);
-          vm.selectFilters(vm.state.filters.charts);
+          vm.selectFiltersRegion(vm.state.filters.region);
+          vm.selectFiltersCharts(vm.state.filters.charts);
 
           // update filter ranges from query
           // b/c state.filters.charts does not include filter ranges
-          // so ranges are not set in selectFilters()
+          // so ranges are not set in selectFiltersCharts()
           if (query && query.filters && query.filters.charts) {
             query.filters.charts.forEach(function (filter) {
               filter.range && vm.setFilter(filter.id, filter.range);
@@ -440,8 +440,8 @@ var app = window.app = new Vue({
         return d.id == id;
       })[0]
     },
-    selectFilters: function (filters) {
-      console.log('app:selectFilters()', filters);
+    selectFiltersCharts: function (filters) {
+      console.log('app:selectFiltersCharts()', filters);
       var vm = this;
 
       // if filter already exists, remove it
@@ -485,14 +485,15 @@ var app = window.app = new Vue({
 
           vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
+          vm.xf.updateStats(id, vm.dataset.config.variables);
 
           vm.setStatus();
           return resolve(geojson);
         });
       });
     },
-    selectStates: function (states) {
-      console.log('app:selectStates()', states);
+    selectFiltersRegion: function (states) {
+      console.log('app:selectFiltersRegion()', states);
       this.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
       if (this.state.selected) this.state.selected.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
 

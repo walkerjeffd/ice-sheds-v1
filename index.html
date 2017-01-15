@@ -34,7 +34,7 @@
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Region Filter</div>
-        <select-picker :config="config.filters.region.config" :options="config.filters.region.options" :selected="state.filters.region" v-on:input="selectStates" label="label" value="id" title="Select states..." multiple="true"></select-picker>
+        <select-picker :config="config.filters.region.config" :options="config.filters.region.options" :selected="state.filters.region" v-on:input="selectFiltersRegion" label="label" value="id" title="Select states..." multiple="true"></select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Display Variable</div>
@@ -56,7 +56,7 @@ filters: {{state.filters.charts}}
     <div class="ice-right-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Catchment Filters and Histograms</div>
-        <select-picker :config="config.filters.charts.config" :options="config.filters.charts.options" :selected="state.filters.charts" v-on:input="selectFilters" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
+        <select-picker :config="config.filters.charts.config" :options="config.filters.charts.options" :selected="state.filters.charts" v-on:input="selectFiltersCharts" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
         <hr>
         <div is="ice-filter" v-for="filter in state.xf.filters" :key="filter.id" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :selected="state.selected" :get-dim="filter.getDim" :get-selected-dim="filter.getSelectedDim" v-on:brush="setFilter" v-on:destroy="removeFilter"></div>
       </div>
