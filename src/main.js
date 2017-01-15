@@ -338,81 +338,83 @@ var app = window.app = new Vue({
   mounted: function () {
     var vm = this;
 
+    // initialize share copy-to-clipboard button
     new Clipboard('.btn-copy');
 
+    // parse URL query string and update state
     var queryState = deserializeState(location.search);
     vm.setState(queryState);
 
-    if (queryState && queryState.map && queryState.map.view) {
-      if (queryState.map.view.center) {
-        vm.state.map.view.center = queryState.map.view.center;
-      }
-      if (queryState.map.view.zoom) {
-        vm.state.map.view.zoom = queryState.map.view.zoom;
-      }
-    }
-
+    // initialize crossfilter
     vm.xf = IceCrossfilter();
 
-    // set up select picker options
-    vm.config.layer.options = vm.dataset.layers.map(function (d) {
-        return {
-          id: d.id,
-          label: d.label
-        };
-      });
-    vm.config.variable.options = vm.dataset.variables.filter(function (d) {
-        return d.aggregation;
-      }).map(function (d) {
-        return {
-          id: d.id,
-          label: d.label
-        };
-      });
-    vm.config.filters.region.options = vm.dataset.regions.options.map(function (d) {
-      return {
-        id: d.id,
-        label: d.label
-      };
-    });
-    vm.config.filters.charts.options = vm.dataset.variables.filter(function (d) {
-        return d.filter;
-      }).map(function (d) {
-        return {
-          id: d.id,
-          label: d.label
-        };
-      });
-
-    // initialize
-    vm.fetchDataset(vm.dataset)
-      .then(function (data) {
-        vm.xf.areaColumn(vm.dataset.columns.area).data(data);
-        vm.xf.addCategoricalDim(vm.dataset.regions.id);
-        vm.selectVariable(vm.state.variable);
-        vm.selectStates(vm.state.filters.region);
-        vm.selectFilters(vm.state.filters.charts);
-
-        if (queryState && queryState.filters && queryState.filters.charts) {
-          queryState.filters.charts.forEach(function (filter) {
-            filter.range && vm.setFilter(filter.id, filter.range);
-          });
-        }
-
-        vm.state.map.getColor = function (id) {
-          var value = vm.xf.getAggregationValue(id);
-          return value === null ? '#EEE' : vm.state.map.colorScale(value);
-        };
-      })
-      .then(function () {
-        return vm.selectLayer(vm.state.layer);
-      })
-      .catch(function (err) {
-        console.error(err);
-        alert('Unable to initialize');
-      });
+    // select dataset
+    vm.selectDataset();
   },
   methods: {
+    selectDataset: function (url) {
+      console.log('app:selectDataset()', url);
+
+      var vm = this;
+
+      // initialize select picker options
+      vm.config.layer.options = vm.dataset.layers.map(function (d) {
+          return {
+            id: d.id,
+            label: d.label
+          };
+        });
+      vm.config.variable.options = vm.dataset.variables.filter(function (d) {
+          return d.aggregation;
+        }).map(function (d) {
+          return {
+            id: d.id,
+            label: d.label
+          };
+        });
+      vm.config.filters.region.options = vm.dataset.regions.options.map(function (d) {
+        return {
+          id: d.id,
+          label: d.label
+        };
+      });
+      vm.config.filters.charts.options = vm.dataset.variables.filter(function (d) {
+          return d.filter;
+        }).map(function (d) {
+          return {
+            id: d.id,
+            label: d.label
+          };
+        });
+
+      // fetch dataset and run application
+      vm.fetchDataset(vm.dataset)
+        .then(function (data) {
+          vm.xf.areaColumn(vm.dataset.columns.area).data(data);
+          vm.xf.addCategoricalDim(vm.dataset.regions.id);
+          vm.selectVariable(vm.state.variable);
+          vm.selectStates(vm.state.filters.region);
+          vm.selectFilters(vm.state.filters.charts);
+
+          if (queryState && queryState.filters && queryState.filters.charts) {
+            queryState.filters.charts.forEach(function (filter) {
+              filter.range && vm.setFilter(filter.id, filter.range);
+            });
+          }
+
+          vm.state.map.getColor = function (id) {
+            var value = vm.xf.getAggregationValue(id);
+            return value === null ? '#EEE' : vm.state.map.colorScale(value);
+          };
+        })
+        .then(function () {
+          return vm.selectLayer(vm.state.layer);
+        })
+        .catch(function (err) {
+          console.error(err);
+          alert('Unable to initialize');
+        });
+    },
     setMapView: function (center, zoom) {
       if (center) this.state.map.view.center = center;
       if (zoom) this.state.map.view.zoom = zoom;
@@ -425,6 +427,7 @@ var app = window.app = new Vue({
       state.variable = newState.variable || state.variable;
       state.layer = newState.layer || state.layer;
       state.variable = newState.variable || state.variable;
+
       if (newState.filters) {
         state.filters.region = newState.filters.region || state.filters.region;
 
@@ -432,9 +435,18 @@ var app = window.app = new Vue({
           state.filters.charts = newState.filters.charts.map(function (d) { return d.id; });
         }
       }
+
+      if (newState.map && newState.map.view) {
+        if (newState.map.view.center) {
+          state.map.view.center = newState.map.view.center;
+        }
+        if (newState.map.view.zoom) {
+          state.map.view.zoom = newState.map.view.zoom;
+        }
+      }
     },
     addFilter: function (id, range) {
-      console.log('app:addFilter()', id);
+      console.log('app:addFilter()', id, range);
       var vm = this;
 
       var variable = this.getVariable(id);
