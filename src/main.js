@@ -152,9 +152,8 @@ var app = window.app = new Vue({
           zoom: 6
         },
         aggregationLayer: undefined,
-        getColor: function (id) {
-          return Math.random();
-        }.bind(this)
+        getFeatureValue: function () { return null; },
+        colorScale: d3.scale.linear().range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl)
       }
     },
   },
@@ -198,9 +197,8 @@ var app = window.app = new Vue({
             .data(data)
             .addCategoricalDim(config.regions.id);
 
-          vm.state.map.getColor = function (id) {
-            var value = vm.xf.getAggregationValue(id);
-            return value === null ? '#EEE' : vm.state.map.colorScale(value);
+          vm.state.map.getFeatureValue = function (id) {
+            return vm.xf.getAggregationValue(id);
           };
 
           vm.updateState(config.state);
@@ -438,7 +436,12 @@ var app = window.app = new Vue({
     getVariable: function (id) {
       return this.dataset.config.variables.filter(function (d) {
         return d.id == id;
-      })[0]
+      })[0];
+    },
+    getLayer: function (id) {
+      return this.dataset.config.layers.filter(function (d) {
+        return d.id == id;
+      })[0];
     },
     selectFiltersCharts: function (filters) {
       console.log('app:selectFiltersCharts()', filters);
@@ -511,9 +514,20 @@ var app = window.app = new Vue({
         return;
       }
 
+      this.state.map.variable = variable;
       this.state.map.colorScale = d3.scale.linear().domain([variable.min, variable.max]).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
 
       this.updateAggregation(this.state.layer, id);
+    },
+    renderTooltip: function (d) {
+      // map tooltip on feature mouseover
+      // d: feature object
+      var layer = this.getLayer(this.state.layer),
+          variable = this.getVariable(this.state.variable),
+          format = d3.format(variable.format),
+          value = this.xf.getAggregationValue(d.id);
+
+      return '<span>' + layer.label + ': ' + d.id + ' | ' + d.properties.name + '</span><br><span>' + variable.label + ' = ' + format(value) + '</span>';
     },
     selectFeature: function (feature) {
       var vm = this;

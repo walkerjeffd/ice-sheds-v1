@@ -21,7 +21,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getColor', 'setView', 'displayVariable', 'filters', 'selected'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getFeatureValue', 'colorScale', 'renderTooltip', 'setView', 'displayVariable', 'filters', 'selected'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -126,8 +126,8 @@ module.exports = {
       console.log('map:watch displayVariable', n);
       this.renderAll();
     },
-    getColor: function (n, o) {
-      console.log('map:watch getColor');
+    getFeatureValue: function (n, o) {
+      console.log('map:watch getFeatureValue');
       this.renderAll();
     },
     selected: function (n, o) {
@@ -188,7 +188,9 @@ module.exports = {
           // return value === null ? naColor : color(value);
           // var value = colorValue(d.id);
           // return value === null ? null : color(value);
-          return vm.getColor(d.id);
+          var value = vm.getFeatureValue(d.id);
+          return value === null ? '#EEE' : vm.colorScale(value);
+          // return vm.getColor(d.id);
           // return color(Math.random());
         })
 
@@ -211,9 +213,8 @@ module.exports = {
           vm.tooltip
             .classed('hidden', false)
             .attr('style', 'left:' + (mouse[0] + 25) + 'px;top:' + (mouse[1] - 25) + 'px')
-            .html(function() {
-              var value = "xyz"
-              return '<span>' + d.id + ' | ' + d.properties.name + '</span><br><span>' + value + '</span>';
+            .html(function () {
+              return vm.renderTooltip(d);
             });
         })
         .on('mouseout', function(d, i) {
@@ -248,7 +249,9 @@ module.exports = {
 
       fillPaths
         .style('fill', function(d, i) {
-          return vm.getColor(d.id);
+          var value = vm.getFeatureValue(d.id);
+          return value === null ? '#EEE' : vm.colorScale(value);
+          // return vm.getColor(d.id);
         })
     }
   }

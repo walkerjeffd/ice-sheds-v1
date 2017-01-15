@@ -181,7 +181,7 @@ module.exports = function (data) {
 
   xf.updateStats = function (key, variables) {
     // compute area weighted mean of all variables by column key
-    console.log('xf:updateStats2(%s)', key, variables);
+    console.log('xf:updateStats(%s)', key, variables);
 
     var areaKey = _area,
         data = _data;
@@ -249,7 +249,7 @@ module.exports = function (data) {
     group.dispose();
     delete ndx;
 
-    console.log('xf:updateStats2(%s) done', key);
+    console.log('xf:updateStats(%s) done', key);
   }
 
 
