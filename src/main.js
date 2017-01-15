@@ -13,8 +13,9 @@ Vue.component('ice-status', require('./components/iceStatus'));
 
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
-var serializeState = function (state) {
+var serialize = function (state) {
   var obj = {
+    configUrl: state.configUrl,
     variable: state.variable,
     layer: state.layer,
     filters: {
@@ -44,7 +45,7 @@ var serializeState = function (state) {
   return queryString.stringify(obj);
 };
 
-var deserializeState = function (query) {
+var deserialize = function (query) {
   if (!query) return;
 
   var parsed = queryString.parse(query);
@@ -129,6 +130,7 @@ var app = window.app = new Vue({
       },
     },
     state: {
+      configUrl: '/data/dataset/sheds-default.json',
       message: 'Initializing...',
       layer: null,
       variable: null,
@@ -160,12 +162,16 @@ var app = window.app = new Vue({
     // initialize crossfilter
     vm.xf = IceCrossfilter();
 
+    // parse search query string
+    var query = deserialize(location.search);
+
     // load dataset
-    // vm.loadDataset('/data/dataset/sheds-default.json')
-    vm.loadDataset('/data/dataset/sheds-geo.json');
+    var configUrl = query && query.configUrl || vm.state.configUrl;
+    vm.loadDataset(configUrl, query);
+    // vm.loadDataset('/data/dataset/sheds-geo.json');
   },
   methods: {
-    loadDataset: function (url) {
+    loadDataset: function (url, query) {
       console.log('app:loadDataset()', url);
 
       var vm = this;
@@ -193,18 +199,17 @@ var app = window.app = new Vue({
           };
 
           vm.updateState(config.state);
-          var queryState = deserializeState(location.search);
-          vm.updateState(queryState);
+          vm.updateState(query);
 
           vm.selectVariable(vm.state.variable);
           vm.selectStates(vm.state.filters.region);
           vm.selectFilters(vm.state.filters.charts);
 
-          // update filter ranges from queryState
+          // update filter ranges from query
           // b/c state.filters.charts does not include filter ranges
           // so ranges are not set in selectFilters()
-          if (queryState && queryState.filters && queryState.filters.charts) {
-            queryState.filters.charts.forEach(function (filter) {
+          if (query && query.filters && query.filters.charts) {
+            query.filters.charts.forEach(function (filter) {
               filter.range && vm.setFilter(filter.id, filter.range);
             });
           }
@@ -232,7 +237,7 @@ var app = window.app = new Vue({
         .then(function (response) {
           if (!response.body) throw new Error('Failed to fetch dataset configuration file (empty response)');
 
-          vm.$set(vm.dataset, 'url', url);
+          vm.$set(vm.state, 'configUrl', url);
 
           var datasetConfig = response.body;
 
@@ -528,7 +533,7 @@ var app = window.app = new Vue({
       this.state.message = message || 'Ready!';
     },
     share: function () {
-      var query = serializeState(this.state),
+      var query = serialize(this.state),
           url = location.origin + location.pathname + '?' + query;
 
       this.shareUrl = url;
