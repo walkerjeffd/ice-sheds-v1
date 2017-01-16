@@ -39,6 +39,7 @@
       <div class="ice-box">
         <div class="ice-box-title">Display Variable</div>
         <select-picker :config="config.variable.config" :options="config.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-picker>
+        <ice-legend :variable="state.variable"></ice-legend>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>

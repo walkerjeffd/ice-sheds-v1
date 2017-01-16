@@ -10,6 +10,7 @@ Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
 Vue.component('ice-map', require('./components/iceMap'));
 Vue.component('ice-status', require('./components/iceStatus'));
+Vue.component('ice-legend', require('./components/iceLegend'));
 
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
