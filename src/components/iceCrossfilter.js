@@ -258,7 +258,7 @@ module.exports = function (data) {
   }
 
   function loadData (data) {
-    console.log('xf:loadData(n=%s)' + data.length);
+    console.log('xf:loadData(n=%s)', data.length);
     xf.ndx = crossfilter(data);
     xf.all = xf.ndx.groupAll();
 

@@ -37,20 +37,15 @@
         <select-picker :config="config.filters.region.config" :options="config.filters.region.options" :selected="state.filters.region" v-on:input="selectFiltersRegion" label="label" value="id" title="Select states..." multiple="true"></select-picker>
       </div>
       <div class="ice-box">
-        <div class="ice-box-title">Display Variable</div>
+        <div class="ice-box-title">Map Variable</div>
         <select-picker :config="config.variable.config" :options="config.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-picker>
-        <ice-legend :variable="state.variable"></ice-legend>
+        <ice-legend :variable="variable" :color-scale="colorScale"></ice-legend>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
-<!-- <pre>
-map: {{state.map.view}}
-layer: {{state.layer}}
-variable: {{state.variable}}
-region: {{state.filters.region}}
-</pre> -->
 <pre>
-filters: {{state.filters.charts}}
+variable-state: {{state.variable}}
+variable-computed: {{variable && variable.id}}
 </pre>
       </div>
     </div>
@@ -63,7 +58,7 @@ filters: {{state.filters.charts}}
       </div>
     </div>
     <ice-status :message="state.message"></ice-status>
-    <ice-map :center="state.map.view.center" :zoom="state.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :aggregation-layer="state.map.aggregationLayer" :display-variable="state.variable" :get-feature-value="state.map.getFeatureValue" :color-scale="state.map.colorScale" :render-tooltip="renderTooltip" :set-view="setMapView" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
+    <ice-map :center="state.map.view.center" :zoom="state.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :layer="state.map.aggregationLayer" :variable="variable" :get-feature-value="state.map.getFeatureValue" :color-scale="colorScale" :render-tooltip="renderTooltip" :set-view="setMapView" :filters="state.xf" :selected="state.selected" v-on:select="selectFeature"></ice-map>
     <div class="ice-loading" v-show="show.loading">
       <h1>Loading</h1>
       <div><i class="fa fa-spinner fa-spin fa-5x fa-fw"></i></div>

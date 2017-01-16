@@ -21,7 +21,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'aggregationLayer', 'getFeatureValue', 'colorScale', 'renderTooltip', 'setView', 'displayVariable', 'filters', 'selected'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'getFeatureValue', 'colorScale', 'renderTooltip', 'setView', 'variable', 'filters', 'selected'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -118,12 +118,12 @@ module.exports = {
     this.leafletMap = leafletMap;
   },
   watch: {
-    aggregationLayer: function (n, o) {
-      this.data.aggregationLayer = n;
+    layer: function (n, o) {
+      this.data.layer = n;
       this.resizeSvg();
     },
-    displayVariable: function (n, o) {
-      console.log('map:watch displayVariable', n);
+    variable: function (n, o) {
+      console.log('map:watch variable', n);
       this.renderAll();
     },
     getFeatureValue: function (n, o) {
@@ -151,8 +151,8 @@ module.exports = {
       }
     },
     resizeSvg: function () {
-      if (this.data.aggregationLayer) {
-        var bounds = this.path.bounds(this.data.aggregationLayer),
+      if (this.data.layer) {
+        var bounds = this.path.bounds(this.data.layer),
             topLeft = bounds[0],
             bottomRight = bounds[1];
 
@@ -170,7 +170,7 @@ module.exports = {
       var vm = this;
 
       var features = [];
-      if (this.data.aggregationLayer) features = this.data.aggregationLayer.features;
+      if (this.data.layer) features = this.data.layer.features;
 
       // bottom layer that only shows the color of each feature
       var fillPaths = this.svg.select('g.aggregation-fill')

@@ -15,7 +15,6 @@ Vue.component('ice-legend', require('./components/iceLegend'));
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
 var serialize = function (state) {
-  console.log(state.selected);
   var obj = {
     configUrl: state.configUrl,
     variable: state.variable,
@@ -153,27 +152,38 @@ var app = window.app = new Vue({
           zoom: 6
         },
         aggregationLayer: undefined,
-        getFeatureValue: function () { return null; },
-        colorScale: d3.scale.linear().range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl)
+        getFeatureValue: function () { return null; }
       }
     },
   },
   mounted: function () {
-    var vm = this;
-
     // initialize share copy-to-clipboard button
     new Clipboard('.btn-copy');
 
     // initialize crossfilter
-    vm.xf = IceCrossfilter();
+    this.xf = IceCrossfilter();
 
     // parse search query string
     var query = deserialize(location.search);
 
     // load dataset
-    var configUrl = query && query.configUrl || vm.state.configUrl;
-    vm.loadDataset(configUrl, query);
-    // vm.loadDataset('/data/dataset/sheds-geo.json');
+    var configUrl = query && query.configUrl || this.state.configUrl;
+    this.loadDataset(configUrl, query);
+  },
+  computed: {
+    variable: function () {
+      return this.getVariableById(this.state.variable);
+    },
+    colorScale: function () {
+      var variable = this.variable,
+          domain = [0, 1];
+
+      if (variable) {
+        domain = [variable.min, variable.max];
+      }
+
+      return d3.scale.linear().domain(domain).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
+    }
   },
   methods: {
     loadDataset: function (url, query) {
@@ -363,7 +373,8 @@ var app = window.app = new Vue({
       console.log('app:addFilter()', id, range);
       var vm = this;
 
-      var variable = this.getVariable(id);
+      var variable = this.getVariableById(id);
+
       if (!variable) {
         console.error('Cannot find variable', id);
         return;
@@ -434,15 +445,27 @@ var app = window.app = new Vue({
 
       this.$set(this.state.xf.filters[idx], 'range', range);
     },
-    getVariable: function (id) {
-      return this.dataset.config.variables.filter(function (d) {
-        return d.id == id;
-      })[0];
+    getVariableById: function (id) {
+      var variable;
+
+      if (this.dataset.config && id) {
+        variable = this.dataset.config.variables.filter(function (d) {
+          return d.id == id;
+        })[0];
+      }
+
+      return variable;
     },
-    getLayer: function (id) {
-      return this.dataset.config.layers.filter(function (d) {
-        return d.id == id;
-      })[0];
+    getLayerById: function (id) {
+      var layer;
+
+      if (this.dataset.config && id) {
+        layer = this.dataset.config.layers.filter(function (d) {
+          return d.id == id;
+        })[0];
+      }
+
+      return layer;
     },
     selectFiltersCharts: function (filters) {
       console.log('app:selectFiltersCharts()', filters);
@@ -469,9 +492,7 @@ var app = window.app = new Vue({
       console.log('app:selectLayer()', id);
       var vm = this;
 
-      var layer = vm.dataset.config.layers.filter(function (d) {
-        return d.id === id;
-      })[0];
+      var layer = this.getLayerById(id);
 
       if (!layer) {
         console.error('Unable to get layer', id);
@@ -505,30 +526,18 @@ var app = window.app = new Vue({
       this.$set(this.state.xf, this.dataset.config.regions.id, states);
     },
     selectVariable: function (id) {
-      console.log('app:selectVariable()', id);
-      var vm = this;
-
-      var variable = this.getVariable(id);
-
-      if (!variable) {
-        console.error('Cannot find variable:', id);
-        return;
-      }
-
-      this.state.map.variable = variable;
-      this.state.map.colorScale = d3.scale.linear().domain([variable.min, variable.max]).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
-
+      console.log('app:selectVariable(%s)', id);
+      this.state.variable = id;
       this.updateAggregation(this.state.layer, id);
     },
     renderTooltip: function (d) {
       // map tooltip on feature mouseover
       // d: feature object
-      var layer = this.getLayer(this.state.layer),
-          variable = this.getVariable(this.state.variable),
-          format = d3.format(variable.format),
+      var layer = this.getLayerById(this.state.layer),
+          format = d3.format(this.variable.format),
           value = this.xf.getAggregationValue(d.id);
 
-      return '<span>' + layer.label + ': ' + d.id + ' | ' + d.properties.name + '</span><br><span>' + variable.label + ' = ' + format(value) + '</span>';
+      return '<span>' + layer.label + ': ' + d.id + ' | ' + d.properties.name + '</span><br><span>' + this.variable.label + ' = ' + format(value) + '</span>';
     },
     selectFeature: function (feature) {
       var vm = this;
