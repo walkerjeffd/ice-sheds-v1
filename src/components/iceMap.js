@@ -228,7 +228,7 @@ module.exports = {
             vm.$emit('select');
           } else {
             // select this feature
-            vm.$emit('select', {id: d.id});
+            vm.$emit('select', d);
           }
         });
 
