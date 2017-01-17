@@ -20,10 +20,10 @@
   <div class="ice-header">
     <span class="brand">SHEDS: Interactive Catchment Explorer</span>
     <div class="pull-right">
-      <a href="#" v-on:click="share">Share</a> |
-      <a href="#" data-toggle="modal" data-target="#data-modal">Data Sources</a> |
       <a href="http://ice.ecosheds.org">ICE Home</a> |
-      <a href="http://ecosheds.org">SHEDS Home</a>
+      <a href="http://ecosheds.org">SHEDS Home</a><br>
+      <a href="#" data-toggle="modal" data-target="#data-modal">Data Sources</a> |
+      <a href="#" v-on:click="share">Share <i class="fa fa-share-square"></i></a>
     </div>
   </div>
   <div class="ice-container">
@@ -44,8 +44,8 @@
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
 <pre>
-variable-state: {{state.variable}}
-variable-computed: {{variable && variable.id}}
+data.count: {{dataset.count}}
+state.xf.filteredCount: {{state.xf.filteredCount}}
 </pre>
       </div>
     </div>
@@ -53,6 +53,7 @@ variable-computed: {{variable && variable.id}}
       <div class="ice-box">
         <div class="ice-box-title">Catchment Filters and Histograms</div>
         <select-picker :config="config.filters.charts.config" :options="config.filters.charts.options" :selected="state.filters.charts" v-on:input="selectFiltersCharts" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
+        <div class="text-right" class="margin-top:5px">{{state.xf.filteredCount | number}} of {{dataset.count | number}} catchments filtered</div>
         <hr>
         <div is="ice-filter" v-for="filter in state.xf.filters" :key="filter.id" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :selected="state.selected" :get-dim="filter.getDim" :get-selected-dim="filter.getSelectedDim" v-on:brush="setFilter" v-on:destroy="removeFilter"></div>
       </div>

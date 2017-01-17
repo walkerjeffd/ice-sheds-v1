@@ -252,6 +252,9 @@ module.exports = function (data) {
     console.log('xf:updateStats(%s) done', key);
   }
 
+  xf.getFilteredCount = function () {
+    return xf.all ? xf.all.value() : 0;
+  }
 
   xf.getStatsById = function (id) {
     return _stats[id];

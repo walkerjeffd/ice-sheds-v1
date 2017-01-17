@@ -63,6 +63,7 @@ var deserialize = function (query) {
   return parsed;
 };
 
+var numberFormat = d3.format(',');
 
 var app = window.app = new Vue({
   el: '#app',
@@ -71,7 +72,9 @@ var app = window.app = new Vue({
     show: {
       loading: true
     },
-    dataset: {},
+    dataset: {
+      count: 0
+    },
     config: {
       layer: {
         config: {},
@@ -144,7 +147,8 @@ var app = window.app = new Vue({
         region: []
       },
       xf: {
-        filters: []
+        filters: [],
+        filteredCount: 0
       },
       map: {
         view: {
@@ -155,6 +159,11 @@ var app = window.app = new Vue({
         getFeatureValue: function () { return null; }
       }
     },
+  },
+  filters: {
+    number: function (value) {
+      return numberFormat(value);
+    }
   },
   mounted: function () {
     // initialize share copy-to-clipboard button
@@ -182,7 +191,7 @@ var app = window.app = new Vue({
         domain = [variable.min, variable.max];
       }
 
-      return d3.scale.linear().domain(domain).range(['hsl(62,100%,90%)', 'hsl(222,30%,20%)']).clamp(true).interpolate(d3.interpolateHcl);
+      return d3.scale.linear().domain(domain).range(['hsl(222,30%,20%)', 'hsl(62,100%,90%)']).clamp(true).interpolate(d3.interpolateHcl);
     }
   },
   methods: {
@@ -204,9 +213,13 @@ var app = window.app = new Vue({
         .then(function (data) {
           var config = vm.dataset.config;
 
+          vm.dataset.count = data.length;
+
           vm.xf.areaColumn(config.columns.area)
             .data(data)
             .addCategoricalDim(config.regions.id);
+
+          vm.state.xf.filteredCount = vm.xf.getFilteredCount();
 
           vm.state.map.getFeatureValue = function (id) {
             return vm.xf.getAggregationValue(id);
@@ -444,6 +457,7 @@ var app = window.app = new Vue({
       }
 
       this.$set(this.state.xf.filters[idx], 'range', range);
+      this.state.xf.filteredCount = this.xf.getFilteredCount();
     },
     getVariableById: function (id) {
       var variable;
@@ -500,6 +514,8 @@ var app = window.app = new Vue({
       }
 
       vm.setStatus('Loading layer...');
+      vm.show.loading = true;
+      // fetch geojson from server
       return new Promise(function (resolve, reject) {
         d3.json(layer.url, function(err, data) {
           if (err) return reject(err);
@@ -513,6 +529,7 @@ var app = window.app = new Vue({
           vm.xf.updateStats(id, vm.dataset.config.variables);
 
           vm.setStatus();
+          vm.show.loading = false;
           return resolve(geojson);
         });
       });

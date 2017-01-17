@@ -111,12 +111,12 @@ module.exports = {
   },
   watch: {
     selected: function () {
-      console.log('filter(' + this.id + '):watch selected');
+      // console.log('filter(' + this.id + '):watch selected');
       this.render();
-    },
-    range: function () {
-      console.log('filter(' + this.id + '):watch range', this.range);
     }
+    // range: function () {
+      // console.log('filter(' + this.id + '):watch range', this.range);
+    // }
   },
   methods: {
     drawBrush: function () {
@@ -132,7 +132,7 @@ module.exports = {
       }
     },
     render: function () {
-      console.log('filter(' + this.id + '):render()');
+      // console.log('filter(' + this.id + '):render()');
       var vm = this;
 
       var groups = this.getDim().group.all();
