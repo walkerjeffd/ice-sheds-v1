@@ -5,6 +5,8 @@ var Vue = require('vue'),
     queryString = require('query-string'),
     Clipboard = require('clipboard');
 
+var config = require('./config');
+
 Vue.use(VueResource);
 Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
@@ -400,57 +402,70 @@ var app = window.app = new Vue({
       console.log('app:addFilter()', id, range);
       var vm = this;
 
-      var variable = this.getVariableById(id);
+      this.setStatus('Adding filter...');
 
-      if (!variable) {
-        console.error('Cannot find variable', id);
-        return;
-      }
+      setTimeout(function () {
+        var variable = vm.getVariableById(id);
 
-      var filter = {
-        id: id,
-        variable: variable,
-        getDim: function () {
-          return vm.xf.getDim(id);
-        },
-        getSelectedDim: function () { return; }
-      };
-
-      this.xf.addFilterDim(id, variable).setFilterDimRange(id, range);
-      if (this.state.selected.xf) {
-        this.state.selected.xf.addFilterDim(id, variable).setFilterDimRange(id, range);
-        filter.getSelectedDim = function () {
-          return vm.state.selected.xf.getDim(filter.id);
+        if (!variable) {
+          console.error('Cannot find variable', id);
+          return;
         }
-      }
 
-      this.state.xf.filters.push(filter);
-      if (this.state.filters.charts.indexOf(id) < 0) {
-        this.state.filters.charts.push(id);
-      }
+        var filter = {
+          id: id,
+          variable: variable,
+          getDim: function () {
+            return vm.xf.getDim(id);
+          },
+          getSelectedDim: function () { return; }
+        };
+
+        vm.xf.addFilterDim(id, variable).setFilterDimRange(id, range);
+        if (vm.state.selected.xf) {
+          vm.state.selected.xf.addFilterDim(id, variable).setFilterDimRange(id, range);
+          filter.getSelectedDim = function () {
+            return vm.state.selected.xf.getDim(filter.id);
+          }
+        }
+
+        vm.state.xf.filters.push(filter);
+        if (vm.state.filters.charts.indexOf(id) < 0) {
+          vm.state.filters.charts.push(id);
+        }
+
+        vm.setStatus();
+      }, 0)
     },
     removeFilter: function (id) {
       console.log('app:removeFilter()', id);
-      var idx = this.state.xf.filters.map(function (d) {
-        return d.id;
-      }).indexOf(id);
 
-      if (idx < 0) {
-        console.error('Unable to remove filter:' + id);
-        return;
-      }
+      this.setStatus('Removing filter...');
 
-      this.xf.removeFilterDim(id);
-      if (this.state.selected.xf) {
-        this.state.selected.xf.removeFilterDim(id);
-      }
+      setTimeout(function () {
+        var idx = this.state.xf.filters.map(function (d) {
+          return d.id;
+        }).indexOf(id);
 
-      this.state.xf.filters.splice(idx, 1);
+        if (idx < 0) {
+          console.error('Unable to remove filter:' + id);
+          return;
+        }
 
-      idx = this.state.filters.charts.indexOf(id);
-      if (idx >= 0) {
-        this.state.filters.charts.splice(idx, 1);
-      }
+        this.xf.removeFilterDim(id);
+        if (this.state.selected.xf) {
+          this.state.selected.xf.removeFilterDim(id);
+        }
+
+        this.state.xf.filters.splice(idx, 1);
+
+        idx = this.state.filters.charts.indexOf(id);
+        if (idx >= 0) {
+          this.state.filters.charts.splice(idx, 1);
+        }
+
+        this.setStatus();
+      }.bind(this), 0);
     },
     setFilter: function (id, range) {
       // console.log('app:setFilter()', id, range);
@@ -550,18 +565,31 @@ var app = window.app = new Vue({
     },
     selectFiltersRegion: function (states) {
       console.log('app:selectFiltersRegion()', states);
-      this.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
-      if (this.state.selected.xf) {
-        this.state.selected.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
-      }
 
-      this.state.filters.region = states;
-      this.$set(this.state.xf, this.dataset.config.regions.id, states);
+      this.setStatus('Setting region filter...');
+
+      setTimeout(function () {
+        this.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
+        if (this.state.selected.xf) {
+          this.state.selected.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
+        }
+
+        this.state.filters.region = states;
+        this.$set(this.state.xf, this.dataset.config.regions.id, states);
+
+        this.setStatus();
+      }.bind(this), 0);
     },
     selectVariable: function (id) {
       console.log('app:selectVariable(%s)', id);
-      this.state.variable = id;
-      this.updateAggregation(this.state.layer, id);
+
+      this.setStatus('Setting map variable...');
+
+      setTimeout(function () {
+        this.state.variable = id;
+        this.updateAggregation(this.state.layer, id);
+        this.setStatus();
+      }.bind(this), 0);
     },
     renderTooltip: function (d) {
       // map tooltip on feature mouseover
@@ -576,38 +604,47 @@ var app = window.app = new Vue({
       var vm = this;
       if (feature) {
         console.log('app:selectFeature(' + feature.id + ') create');
-        this.$set(this.state.selected, 'feature', feature);
+        vm.setStatus('Selecting feature...');
 
-        // create new crossfilter using only data for selected feature
-        var subset = this.xf.data().filter(function (d) {
-          return d[vm.state.layer] === feature.id;
-        });
-        var xf = IceCrossfilter().data(subset);
-        this.$set(this.state.selected, 'xf', xf);
+        setTimeout(function () {
+          vm.$set(vm.state.selected, 'feature', feature);
 
-        // add categorical dimensions
-        xf.addCategoricalDim(vm.dataset.config.regions.id)
-          .setCategoricalDimFilter(vm.dataset.config.regions.id, this.state.filters.region);
+          // create new crossfilter using only data for selected feature
+          var subset = vm.xf.data().filter(function (d) {
+            return d[vm.state.layer] === feature.id;
+          });
+          var xf = IceCrossfilter().data(subset);
+          vm.$set(vm.state.selected, 'xf', xf);
 
-        // add filter dimensions
-        this.state.xf.filters.forEach(function (filter) {
-          xf.addFilterDim(filter.id, filter.variable).setFilterDimRange(filter.id, filter.range);
-          filter.getSelectedDim = function () {
-            return xf.getDim(filter.id);
-          };
-        });
-      } else if (this.state.selected.feature) {
-        console.log('app:selectFeature(' + this.state.selected.feature.id + ') destroy');
-        this.state.selected.xf.destroy();
-        this.state.xf.filters.forEach(function (filter) {
-          filter.getSelectedDim = function () { return; };
-        });
-        this.$delete(this.state.selected, 'feature');
-        this.$delete(this.state.selected, 'xf');
+          // add categorical dimensions
+          xf.addCategoricalDim(vm.dataset.config.regions.id)
+            .setCategoricalDimFilter(vm.dataset.config.regions.id, vm.state.filters.region);
+
+          // add filter dimensions
+          vm.state.xf.filters.forEach(function (filter) {
+            xf.addFilterDim(filter.id, filter.variable).setFilterDimRange(filter.id, filter.range);
+            filter.getSelectedDim = function () {
+              return xf.getDim(filter.id);
+            };
+          });
+          vm.setStatus();
+        }, 0);
+      } else if (vm.state.selected.feature) {
+        console.log('app:selectFeature(' + vm.state.selected.feature.id + ') destroy');
+        vm.setStatus('Unselecting feature...');
+        setTimeout(function () {
+          vm.state.selected.xf.destroy();
+          vm.state.xf.filters.forEach(function (filter) {
+            filter.getSelectedDim = function () { return; };
+          });
+          vm.$delete(vm.state.selected, 'feature');
+          vm.$delete(vm.state.selected, 'xf');
+          vm.setStatus();
+        }, 0);
       }
     },
     setStatus: function (message) {
-      this.state.message = message || 'Ready!';
+      this.state.message = message;
     },
     share: function () {
       var query = serialize(this.state),
@@ -625,6 +662,28 @@ var app = window.app = new Vue({
     },
     zoomTo: function (feature) {
       console.log('app:zoomTo(%s)', feature && feature.id);
+
+      this.setStatus('Zooming to catchments...');
+
+      // fetch catchments from api
+      this.$http.get(config.api.url + '/catchments', {
+          params: {huc12: '010100080804'}
+        })
+        .then(function (response) {
+          console.log(response);
+          // add catchments geojson to data
+        })
+        .catch(function (response) {
+          console.log('error', response);
+        })
+        .finally(function () {
+          this.setStatus();
+        });
+
+      // zoom to feature boundary
+      // update map mode to catchments
+      // change state.map.getFeatureValue to get catchment values
+      // filter xf for current huc to update filter charts
     }
   }
 })

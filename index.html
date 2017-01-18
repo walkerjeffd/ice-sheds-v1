@@ -58,7 +58,7 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
         <div is="ice-filter" v-for="filter in state.xf.filters" :key="filter.id" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :selected="state.selected" :get-dim="filter.getDim" :get-selected-dim="filter.getSelectedDim" v-on:brush="setFilter" v-on:destroy="removeFilter"></div>
       </div>
     </div>
-    <ice-status :message="state.message"></ice-status>
+    <ice-status :message="state.message" v-show="state.message"></ice-status>
     <ice-select-info :feature-type="featureType" :feature="state.selected.feature" v-show="state.selected.feature" v-on:unselect="selectFeature" v-on:zoom="zoomTo"></ice-select-info>
     <ice-map :center="state.map.view.center" :zoom="state.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :layer="state.map.aggregationLayer" :variable="variable" :get-feature-value="state.map.getFeatureValue" :color-scale="colorScale" :render-tooltip="renderTooltip" :set-view="setMapView" :filters="state.xf" :selected="state.selected.feature" v-on:select="selectFeature"></ice-map>
     <div class="ice-loading" v-show="show.loading">

@@ -119,6 +119,7 @@ module.exports = {
   },
   watch: {
     layer: function (n, o) {
+      console.log('map:watch layer');
       this.data.layer = n;
       this.resizeSvg();
     },
@@ -126,13 +127,14 @@ module.exports = {
       console.log('map:watch variable', n);
       this.renderAll();
     },
-    getFeatureValue: function (n, o) {
-      console.log('map:watch getFeatureValue');
-      this.renderAll();
-    },
+    // getFeatureValue: function (n, o) {
+      // console.log('map:watch getFeatureValue');
+      // this.renderAll();
+    // },
     selected: function (n, o) {
       console.log('map:watch selected', (n ? n.id : 'none'));
-      this.renderAll();
+      // this.renderAll();
+      this.renderSelected();
     },
     center: function (n, o) {
       console.log('map:watch center', n);
@@ -164,6 +166,13 @@ module.exports = {
         this.svg.select('g').attr('transform', 'translate(' + -topLeft[0] + ',' + -topLeft[1] + ')');
       }
       this.renderAll();
+    },
+    renderSelected: function () {
+      var vm = this;
+      vm.svg.select('g.aggregation-mouse').selectAll('path.ice-map-path-aggregation-mouse')
+        .style('stroke', function (d) {
+          return vm.selected && vm.selected.id == d.id ? 'red' : null;
+        });
     },
     renderAll: function () {
       console.log('map:renderAll()');
