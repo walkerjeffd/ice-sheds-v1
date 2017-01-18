@@ -21,13 +21,19 @@
     <span class="brand">SHEDS: Interactive Catchment Explorer</span>
     <div class="pull-right">
       <a href="http://ice.ecosheds.org">ICE Home</a> |
-      <a href="http://ecosheds.org">SHEDS Home</a><br>
-      <a href="#" data-toggle="modal" data-target="#data-modal">Data Sources</a> |
-      <a href="#" v-on:click="share">Share <i class="fa fa-share-square"></i></a>
+      <a href="http://ecosheds.org">SHEDS Home</a>
     </div>
   </div>
   <div class="ice-container">
     <div class="ice-left-sidebar">
+      <div class="ice-box">
+        <div class="ice-box-title">Controls</div>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-default" data-toggle="modal" data-target="#data-modal"><i class="fa fa-info"></i> Dataset</button>
+          <button class="btn btn-default" @click="share"><i class="fa fa-share"></i> Share</button>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modal-download"><i class="fa fa-download"></i> Download</button>
+        </div>
+      </div>
       <div class="ice-box">
         <div class="ice-box-title">Aggregation Level</div>
         <select-picker :config="config.layer.config" :options="config.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id" title="Select layer..."></select-picker>
@@ -47,6 +53,7 @@
 data.count: {{dataset.count}}
 state.xf.filteredCount: {{state.xf.filteredCount}}
 </pre>
+
       </div>
     </div>
     <div class="ice-right-sidebar">
@@ -84,6 +91,31 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
                 </span>
               </div>
               <p>Copy this URL to share your current ICE view.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal-download">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Download</h4>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-xs-12">
+              <button class="btn btn-primary" @click="downloadAggregationLayer">Download HUC Layer as GeoJSON</button>
+              <p>Click this button to download the current HUC layer in <a href="http://geojson.org/" target="_blank">GeoJSON</a> format.</p>
+              <hr>
+              <a class="btn btn-primary" :href="dataset.loaded ? dataset.config.data.url : '#'" download>Download Dataset as CSV</a>
+              <p>Click this button to download the dataset containing values of each variable for all catchments in CSV format. Shapefiles of the catchments can be downloaded here. Use the <code>featureid</code> columns to join the dataset to the shapefile attribute table.</p>
             </div>
           </div>
         </div>

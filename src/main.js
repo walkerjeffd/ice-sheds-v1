@@ -17,6 +17,19 @@ Vue.component('ice-legend', require('./components/iceLegend'));
 
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
+var downloadJsonFile = function (data, filename) {
+  var a = document.createElement("a");
+  document.body.appendChild(a);
+  a.style = "display: none";
+  var json = JSON.stringify(data),
+      blob = new Blob([json], {type: "octet/stream"}),
+      url = window.URL.createObjectURL(blob);
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
 var serialize = function (state) {
   var obj = {
     configUrl: state.configUrl,
@@ -78,7 +91,8 @@ var app = window.app = new Vue({
       loading: true
     },
     dataset: {
-      count: 0
+      count: 0,
+      loaded: false
     },
     config: {
       layer: {
@@ -230,6 +244,7 @@ var app = window.app = new Vue({
           var config = vm.dataset.config;
 
           vm.dataset.count = data.length;
+          vm.dataset.loaded = true;
 
           vm.xf.areaColumn(config.columns.area)
             .data(data)
@@ -684,6 +699,36 @@ var app = window.app = new Vue({
       // update map mode to catchments
       // change state.map.getFeatureValue to get catchment values
       // filter xf for current huc to update filter charts
+    },
+    downloadAggregationLayer: function () {
+      var vm = this;
+      this.setStatus('Downloading file...');
+
+      setTimeout(function () {
+        var features = this.state.map.aggregationLayer.features.map(function (d) {
+          var props = {
+            name: d.properties.name
+          };
+          props[vm.state.layer] = d.id;
+          props[vm.state.variable] = vm.xf.getAggregationValue(d.id);
+
+          return {
+            type: d.type,
+            id: d.id,
+            properties: props,
+            geometry: d.geometry
+          };
+        });
+
+        var data = {
+          type: "FeatureCollection",
+          features: features
+        };
+
+        downloadJsonFile(data, 'ice-sheds-' + this.state.layer + '.geojson');
+
+        this.setStatus();
+      }.bind(this), 0)
     }
   }
 })
