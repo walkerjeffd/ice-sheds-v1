@@ -678,15 +678,19 @@ var app = window.app = new Vue({
     zoomTo: function (feature) {
       console.log('app:zoomTo(%s)', feature && feature.id);
 
+      var vm = this;
+
       this.setStatus('Zooming to catchments...');
+
+      var params = {};
+      params[this.state.layer] = feature.id;
 
       // fetch catchments from api
       this.$http.get(config.api.url + '/catchments', {
-          params: {huc12: '010100080804'}
+          params: params
         })
         .then(function (response) {
-          console.log(response);
-          // add catchments geojson to data
+          vm.$set(vm.state.map, 'catchmentLayer', response.data.data);
         })
         .catch(function (response) {
           console.log('error', response);

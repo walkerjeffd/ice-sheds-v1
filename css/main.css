@@ -143,6 +143,21 @@ path.ice-map-path-aggregation-mouse:hover {
   stroke: black;
 }
 
+path.ice-map-path-catchment-fill {
+  fill: rgb(200,200,200);
+  stroke: rgb(200,200,200);
+}
+
+path.ice-map-path-catchment-mouse {
+  fill: none;
+  stroke: none;
+}
+
+path.ice-map-path-catchment-mouse:hover {
+  stroke: black;
+}
+
+
 /* STATUS WIDGET ----------------------------------------------------------- */
 .ice-status {
   position: absolute;

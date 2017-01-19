@@ -29,22 +29,47 @@
       <div class="ice-box">
         <div class="ice-box-title">Controls</div>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-default" data-toggle="modal" data-target="#data-modal"><i class="fa fa-info"></i> Dataset</button>
+          <button class="btn btn-default disabled" data-toggle="modal" data-target="#data-modal"><i class="fa fa-info"></i> Dataset</button>
           <button class="btn btn-default" @click="share"><i class="fa fa-share"></i> Share</button>
           <button class="btn btn-default" data-toggle="modal" data-target="#modal-download"><i class="fa fa-download"></i> Download</button>
         </div>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Aggregation Level</div>
-        <select-picker :config="config.layer.config" :options="config.layer.options" :selected="state.layer" v-on:input="selectLayer" label="label" value="id" title="Select layer..."></select-picker>
+        <select-picker
+          :config="config.layer.config"
+          :options="config.layer.options"
+          :selected="state.layer"
+          v-on:input="selectLayer"
+          label="label"
+          value="id"
+          title="Select layer...">
+        </select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Region Filter</div>
-        <select-picker :config="config.filters.region.config" :options="config.filters.region.options" :selected="state.filters.region" v-on:input="selectFiltersRegion" label="label" value="id" title="Select states..." multiple="true"></select-picker>
+        <select-picker
+          :config="config.filters.region.config"
+          :options="config.filters.region.options"
+          :selected="state.filters.region"
+          v-on:input="selectFiltersRegion"
+          label="label"
+          value="id"
+          title="Select states..."
+          multiple="true">
+        </select-picker>
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Map Variable</div>
-        <select-picker :config="config.variable.config" :options="config.variable.options" :selected="state.variable" v-on:input="selectVariable" label="label" value="id" title="Select variable..."></select-picker>
+        <select-picker
+          :config="config.variable.config"
+          :options="config.variable.options"
+          :selected="state.variable"
+          v-on:input="selectVariable"
+          label="label"
+          value="id"
+          title="Select variable...">
+        </select-picker>
         <ice-legend :variable="variable" :color-scale="colorScale"></ice-legend>
       </div>
       <div class="ice-box">
@@ -59,15 +84,58 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
     <div class="ice-right-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Catchment Filters and Histograms</div>
-        <select-picker :config="config.filters.charts.config" :options="config.filters.charts.options" :selected="state.filters.charts" v-on:input="selectFiltersCharts" label="label" value="id" title="Select filter variables..." multiple="true"></select-picker>
+        <select-picker
+          :config="config.filters.charts.config"
+          :options="config.filters.charts.options"
+          :selected="state.filters.charts"
+          v-on:input="selectFiltersCharts"
+          label="label"
+          value="id"
+          title="Select filter variables..."
+          multiple="true">
+        </select-picker>
         <div class="text-right" class="margin-top:5px">{{state.xf.filteredCount | number}} of {{dataset.count | number}} catchments filtered</div>
         <hr>
-        <div is="ice-filter" v-for="filter in state.xf.filters" :key="filter.id" :id="filter.id" :range="filter.range" :variable="filter.variable" :filters="state.xf" :selected="state.selected" :get-dim="filter.getDim" :get-selected-dim="filter.getSelectedDim" v-on:brush="setFilter" v-on:destroy="removeFilter"></div>
+        <div
+          is="ice-filter"
+          v-for="filter in state.xf.filters"
+          :key="filter.id"
+          :id="filter.id"
+          :range="filter.range"
+          :variable="filter.variable"
+          :filters="state.xf"
+          :selected="state.selected"
+          :get-dim="filter.getDim"
+          :get-selected-dim="filter.getSelectedDim"
+          v-on:brush="setFilter"
+          v-on:destroy="removeFilter">
+        </div>
       </div>
     </div>
     <ice-status :message="state.message" v-show="state.message"></ice-status>
-    <ice-select-info :feature-type="featureType" :feature="state.selected.feature" v-show="state.selected.feature" v-on:unselect="selectFeature" v-on:zoom="zoomTo"></ice-select-info>
-    <ice-map :center="state.map.view.center" :zoom="state.map.view.zoom" :basemaps="config.map.basemaps" :overlays="config.map.overlays" :layer="state.map.aggregationLayer" :variable="variable" :get-feature-value="state.map.getFeatureValue" :color-scale="colorScale" :render-tooltip="renderTooltip" :set-view="setMapView" :filters="state.xf" :selected="state.selected.feature" v-on:select="selectFeature"></ice-map>
+    <ice-select-info
+      :feature-type="featureType"
+      :feature="state.selected.feature"
+      v-show="state.selected.feature"
+      v-on:unselect="selectFeature"
+      v-on:zoom="zoomTo">
+    </ice-select-info>
+    <ice-map
+      :center="state.map.view.center"
+      :zoom="state.map.view.zoom"
+      :basemaps="config.map.basemaps"
+      :overlays="config.map.overlays"
+      :layer="state.map.aggregationLayer"
+      :catchment-layer="state.map.catchmentLayer"
+      :variable="variable"
+      :get-feature-value="state.map.getFeatureValue"
+      :color-scale="colorScale"
+      :render-tooltip="renderTooltip"
+      :set-view="setMapView"
+      :filters="state.xf"
+      :selected="state.selected.feature"
+      v-on:select="selectFeature">
+    </ice-map>
     <div class="ice-loading" v-show="show.loading">
       <h1>Loading</h1>
       <div><i class="fa fa-spinner fa-spin fa-5x fa-fw"></i></div>

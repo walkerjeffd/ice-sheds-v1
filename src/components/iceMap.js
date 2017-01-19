@@ -21,7 +21,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'getFeatureValue', 'colorScale', 'renderTooltip', 'setView', 'variable', 'filters', 'selected'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'catchmentLayer', 'getFeatureValue', 'colorScale', 'renderTooltip', 'setView', 'variable', 'filters', 'selected'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -100,7 +100,8 @@ module.exports = {
 
     g.append('g').classed('aggregation-fill', true);
     g.append('g').classed('aggregation-mouse', true);
-    g.append('g').classed('catchments', true);
+    g.append('g').classed('catchment-fill', true);
+    g.append('g').classed('catchment-mouse', true);
 
     // tooltip
     this.tooltip = d3.select(this.$el).append('div').attr('class', 'ice-map-tooltip hidden');
@@ -122,6 +123,10 @@ module.exports = {
       console.log('map:watch layer');
       this.data.layer = n;
       this.resizeSvg();
+    },
+    catchmentLayer: function (n, o) {
+      console.log('map:watch catchmentLayer', n);
+      this.renderAll();
     },
     variable: function (n, o) {
       console.log('map:watch variable', n);
@@ -173,6 +178,34 @@ module.exports = {
         .style('stroke', function (d) {
           return vm.selected && vm.selected.id == d.id ? 'red' : null;
         });
+    },
+    renderCatchment: function () {
+      console.log('map:renderCatchment()', this.catchmentLayer);
+
+      var vm = this;
+      var features = this.catchmentLayer && this.catchmentLayer.features;
+      if (!features) return;
+
+      var gFill = this.svg.select('g.catchment-fill');
+
+      var fillPaths = gFill.selectAll('path.ice-map-path-catchment-fill')
+        .data(features);
+
+      fillPaths.enter()
+        .append('path')
+        .classed('ice-map-path-catchment-fill', true);
+
+      fillPaths
+        .attr('d', this.path)
+        .style('fill', function(d, i) {
+          // var value = vm.getFeatureValue(d.id);
+          // return value === null ? '#EEE' : vm.colorScale(value);
+          var domain = vm.colorScale.domain(),
+              value = domain[0] + Math.random()*(domain[1] - domain[0]);
+          return vm.colorScale(value);
+        })
+
+      fillPaths.exit().remove();
     },
     renderAll: function () {
       console.log('map:renderAll()');
@@ -248,6 +281,8 @@ module.exports = {
         });
 
       mousePaths.exit().remove();
+
+      this.renderCatchment();
     },
     renderFill: function () {
       // console.log('map:renderFill()');
