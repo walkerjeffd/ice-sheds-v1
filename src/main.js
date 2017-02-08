@@ -247,8 +247,11 @@ var app = window.app = new Vue({
           vm.dataset.loaded = true;
 
           vm.xf.areaColumn(config.columns.area)
-            .data(data)
-            .addCategoricalDim(config.regions.id);
+            .data(data);
+
+          if (config.region) {
+            vm.xf.addCategoricalDim(config.region.id);
+          }
 
           vm.state.xf.filteredCount = vm.xf.getFilteredCount();
 
@@ -338,12 +341,16 @@ var app = window.app = new Vue({
             label: d.label
           };
         });
-      vm.config.filters.region.options = config.regions.options.map(function (d) {
-        return {
-          id: d.id,
-          label: d.label
-        };
-      });
+
+      if (config.region) {
+        vm.config.filters.region.options = config.region.options.map(function (d) {
+          return {
+            id: d.id,
+            label: d.label
+          };
+        });
+      }
+
       vm.config.filters.charts.options = config.variables.filter(function (d) {
           return d.filter;
         }).map(function (d) {
@@ -578,19 +585,23 @@ var app = window.app = new Vue({
         });
       });
     },
-    selectFiltersRegion: function (states) {
-      console.log('app:selectFiltersRegion()', states);
+    selectFiltersRegion: function (values) {
+      console.log('app:selectFiltersRegion()', values);
+
+      if (!this.dataset.config.region) {
+        return;
+      }
 
       this.setStatus('Setting region filter...');
 
       setTimeout(function () {
-        this.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
+        this.xf.setCategoricalDimFilter(this.dataset.config.region.id, values);
         if (this.state.selected.xf) {
-          this.state.selected.xf.setCategoricalDimFilter(this.dataset.config.regions.id, states);
+          this.state.selected.xf.setCategoricalDimFilter(this.dataset.config.region.id, values);
         }
 
-        this.state.filters.region = states;
-        this.$set(this.state.xf, this.dataset.config.regions.id, states);
+        this.state.filters.region = values;
+        this.$set(this.state.xf, this.dataset.config.region.id, values);
 
         this.setStatus();
       }.bind(this), 0);
@@ -632,8 +643,10 @@ var app = window.app = new Vue({
           vm.$set(vm.state.selected, 'xf', xf);
 
           // add categorical dimensions
-          xf.addCategoricalDim(vm.dataset.config.regions.id)
-            .setCategoricalDimFilter(vm.dataset.config.regions.id, vm.state.filters.region);
+          if (vm.dataset.config.region) {
+            xf.addCategoricalDim(vm.dataset.config.region.id)
+              .setCategoricalDimFilter(vm.dataset.config.region.id, vm.state.filters.region);
+          }
 
           // add filter dimensions
           vm.state.xf.filters.forEach(function (filter) {
