@@ -3,6 +3,8 @@ require('leaflet-bing-layer');
 
 require('../leaflet/controlTransparency');
 
+var nullFill = '#EEE';
+
 var basemapGenerators = {
   bing: function (options) {
     return {
@@ -26,6 +28,11 @@ module.exports = {
   data: function () {
     return {
       data: {}
+    }
+  },
+  computed: {
+    catchmentMode: function () {
+      return !!this.catchmentLayer;
     }
   },
   mounted: function () {
@@ -127,6 +134,7 @@ module.exports = {
     catchmentLayer: function (n, o) {
       console.log('map:watch catchmentLayer', n);
       this.renderAll();
+      this.fitToCatchments(n);
     },
     variable: function (n, o) {
       console.log('map:watch variable', n);
@@ -156,6 +164,13 @@ module.exports = {
         console.log('map:updateView()', center, zoom);
         this.leafletMap.setView(center, zoom);
       }
+    },
+    fitToCatchments: function (catchments) {
+      console.log('map:fitToCatchments()', catchments);
+      if (!catchments) return;
+
+      var geoJson = L.geoJson(catchments);
+      this.leafletMap.fitBounds(geoJson.getBounds());
     },
     resizeSvg: function () {
       if (this.data.layer) {
@@ -199,7 +214,7 @@ module.exports = {
         .attr('d', this.path)
         .style('fill', function(d, i) {
           // var value = vm.getFeatureValue(d.id);
-          // return value === null ? '#EEE' : vm.colorScale(value);
+          // return value === null ? nullFill : vm.colorScale(value);
           var domain = vm.colorScale.domain(),
               value = domain[0] + Math.random()*(domain[1] - domain[0]);
           return vm.colorScale(value);
@@ -224,19 +239,11 @@ module.exports = {
         .classed('ice-map-path-aggregation-fill', true);
 
       fillPaths
-        .attr('d', this.path)
-        .style('fill', function(d, i) {
-          // var value  = resolution === 'catchment' ? null : getHucValue(d, i);
-          // return value === null ? naColor : color(value);
-          // var value = colorValue(d.id);
-          // return value === null ? null : color(value);
-          var value = vm.getFeatureValue(d.id);
-          return value === null ? '#EEE' : vm.colorScale(value);
-          // return vm.getColor(d.id);
-          // return color(Math.random());
-        })
+        .attr('d', this.path);
 
       fillPaths.exit().remove();
+
+      vm.renderFill();
 
       // top layer for mouse interaction
       var mousePaths = this.svg.select('g.aggregation-mouse').selectAll('path.ice-map-path-aggregation-mouse')
@@ -285,7 +292,7 @@ module.exports = {
       this.renderCatchment();
     },
     renderFill: function () {
-      // console.log('map:renderFill()');
+      console.log('map:renderFill()');
       var vm = this;
 
       var fillPaths = this.svg.select('g.aggregation-fill')
@@ -293,9 +300,11 @@ module.exports = {
 
       fillPaths
         .style('fill', function(d, i) {
+          console.log(vm.catchmentMode);
+          if (vm.catchmentMode) return nullFill;
+
           var value = vm.getFeatureValue(d.id);
-          return value === null ? '#EEE' : vm.colorScale(value);
-          // return vm.getColor(d.id);
+          return value === null ? nullFill : vm.colorScale(value);
         })
     }
   }
