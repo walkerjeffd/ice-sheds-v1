@@ -36,8 +36,7 @@ var serialize = function (state) {
     variable: state.variable,
     layer: state.layer,
     filters: {
-      charts: [],
-      region: state.filters.region
+      charts: []
     },
     selected: {
     },
@@ -157,7 +156,7 @@ var app = window.app = new Vue({
       },
     },
     state: {
-      configUrl: '/data/dataset/sheds-default.json',
+      configUrl: '/data/dataset/cce-default.json',
       message: 'Initializing...',
       layer: null,
       variable: null,
@@ -173,8 +172,8 @@ var app = window.app = new Vue({
       },
       map: {
         view: {
-          center: [42.2, -71.1],
-          zoom: 6
+          center: [49, -114],
+          zoom: 7
         },
         aggregationLayer: undefined,
         getFeatureValue: function () { return null; }
@@ -377,10 +376,10 @@ var app = window.app = new Vue({
 
             d[config.columns.area] = +d[config.columns.area];
 
-            d.huc10 = d.huc12.substr(0, 10);
-            d.huc8 = d.huc12.substr(0, 8);
-            d.huc6 = d.huc12.substr(0, 6);
-            d.huc4 = d.huc12.substr(0, 4);
+            // d.huc10 = d.huc12.substr(0, 10);
+            // d.huc8 = d.huc12.substr(0, 8);
+            // d.huc6 = d.huc12.substr(0, 6);
+            // d.huc4 = d.huc12.substr(0, 4);
           });
 
           resolve(data);
