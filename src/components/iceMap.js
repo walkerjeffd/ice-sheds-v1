@@ -23,7 +23,7 @@ var basemapGenerators = {
 }
 
 module.exports = {
-  props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'catchmentLayer', 'getFeatureValue', 'colorScale', 'renderTooltip', 'setView', 'variable', 'filters', 'selected'],
+  props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'catchmentLayer', 'getFeatureValue', 'getCatchmentValue', 'colorScale', 'renderTooltip', 'setView', 'variable', 'filters', 'selected'],
   template: '<div class="ice-map"></div>',
   data: function () {
     return {
@@ -212,13 +212,14 @@ module.exports = {
 
       fillPaths
         .attr('d', this.path)
+        .style('stroke-width', 0.1)
         .style('fill', function(d, i) {
-          // var value = vm.getFeatureValue(d.id);
-          // return value === null ? nullFill : vm.colorScale(value);
-          var domain = vm.colorScale.domain(),
-              value = domain[0] + Math.random()*(domain[1] - domain[0]);
-          return vm.colorScale(value);
-        })
+          var value = vm.getCatchmentValue(d.id);
+          return value === null ? nullFill : vm.colorScale(value);
+          // var domain = vm.colorScale.domain(),
+          //     value = domain[0] + Math.random()*(domain[1] - domain[0]);
+          // return vm.colorScale(value);
+        });
 
       fillPaths.exit().remove();
     },
@@ -292,20 +293,21 @@ module.exports = {
       this.renderCatchment();
     },
     renderFill: function () {
-      console.log('map:renderFill()');
       var vm = this;
 
-      var fillPaths = this.svg.select('g.aggregation-fill')
-        .selectAll('path.ice-map-path-aggregation-fill');
-
-      fillPaths
+      this.svg.select('g.aggregation-fill')
+        .selectAll('path.ice-map-path-aggregation-fill')
         .style('fill', function(d, i) {
-          console.log(vm.catchmentMode);
-          if (vm.catchmentMode) return nullFill;
-
           var value = vm.getFeatureValue(d.id);
           return value === null ? nullFill : vm.colorScale(value);
         })
+
+      this.svg.select('g.catchment-fill')
+        .selectAll('path.ice-map-path-catchment-fill')
+        .style('fill', function(d, i) {
+          var value = vm.getCatchmentValue(d.id);
+          return value === null ? nullFill : vm.colorScale(value);
+        });
     }
   }
 };

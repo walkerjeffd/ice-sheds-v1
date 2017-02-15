@@ -74,10 +74,10 @@
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
-<pre>
+<!-- <pre>
 data.count: {{dataset.count}}
 state.xf.filteredCount: {{state.xf.filteredCount}}
-</pre>
+</pre> -->
 
       </div>
     </div>
@@ -118,7 +118,7 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
       :feature="state.selected.feature"
       v-show="state.selected.feature"
       v-on:unselect="selectFeature"
-      v-on:zoom="zoomTo">
+      v-on:zoom="zoomToCatchments">
     </ice-select-info>
     <ice-map
       :center="state.map.view.center"
@@ -129,6 +129,7 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
       :catchment-layer="state.map.catchmentLayer"
       :variable="variable"
       :get-feature-value="state.map.getFeatureValue"
+      :get-catchment-value="state.map.getCatchmentValue"
       :color-scale="colorScale"
       :render-tooltip="renderTooltip"
       :set-view="setMapView"

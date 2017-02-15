@@ -1,22 +1,34 @@
 var crossfilter = require('crossfilter');
 
 module.exports = function (data) {
-  var xf = {}, _dims = {}, _data, _area, _stats;
+  var xf = {}, _dims = {}, _data, _area, _idColumn, _stats, _features = {};
 
   xf.data = function (_) {
+    // get/set dataset
     if (!arguments.length) return _data;
     _data = _;
     loadData(_data);
     return xf;
   }
 
+  xf.idColumn = function (_) {
+    // get/set catchment id column
+    if (!arguments.length) return _idColumn;
+    _idColumn = _;
+    return xf;
+  }
+
   xf.areaColumn = function (_) {
+    // get/set catchment area column
     if (!arguments.length) return _area;
     _area = _;
     return xf;
   }
 
   xf.setAggregation = function (key, value) {
+    // set aggregation dimension
+    // key: aggregation key (e.g. huc8)
+    // value: aggregation variable (e.g. elevation)
     console.log('xf:setAggregation(%s, %s)', key, value);
 
     if (xf.agg && xf.agg.dim) {
@@ -67,7 +79,20 @@ module.exports = function (data) {
   }
 
   xf.getAggregationValue = function (id) {
+    // get aggregation value for aggregation feature id
     return xf.agg.values[id];
+  }
+
+  xf.getCatchmentValue = function (id, key) {
+    // get catchment value by catchment id
+    // id: catchment id
+    // key: (optional) variable key, if undefined returns catchment object
+    return key ? _features.map.get(id)[key] : _features.map.get(id);
+  }
+
+  xf.hasCatchment = function (id) {
+    // is catchment in filter(s)
+    return _features.set.has(id);
   }
 
   xf.addCategoricalDim = function (id) {
@@ -264,6 +289,25 @@ module.exports = function (data) {
     console.log('xf:loadData(n=%s)', data.length);
     xf.ndx = crossfilter(data);
     xf.all = xf.ndx.groupAll();
+
+    _features.map = d3.map(data, function (d) { return d[_idColumn]; });
+    _features.set = d3.set(data.map(function (d) { return d[_idColumn]; }));
+
+    _features.group = xf.all.reduce(
+      function reduceAdd(p, v) {
+        p += 1;
+        _features.set.add(v[_idColumn]);
+        return p;
+      },
+      function reduceRemove(p, v) {
+        p -= 1;
+        _features.set.remove(v[_idColumn]);
+        return p;
+      },
+      function reduceInit(p, v) {
+        return 0;
+      }
+    );
 
     return xf;
   }

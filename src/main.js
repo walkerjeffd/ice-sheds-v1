@@ -177,7 +177,8 @@ var app = window.app = new Vue({
           zoom: 6
         },
         aggregationLayer: undefined,
-        getFeatureValue: function () { return null; }
+        getFeatureValue: function () { return null; },
+        getCatchmentValue: function () { return null; }
       }
     },
   },
@@ -246,7 +247,9 @@ var app = window.app = new Vue({
           vm.dataset.count = data.length;
           vm.dataset.loaded = true;
 
-          vm.xf.areaColumn(config.columns.area)
+          vm.xf
+            .areaColumn(config.columns.area)
+            .idColumn(config.columns.id)
             .data(data);
 
           if (config.region) {
@@ -688,8 +691,8 @@ var app = window.app = new Vue({
       this.state.variable = variable;
       this.xf.setAggregation(this.state.layer, this.state.variable);
     },
-    zoomTo: function (feature) {
-      console.log('app:zoomTo(%s)', feature && feature.id);
+    zoomToCatchments: function (feature) {
+      console.log('app:zoomToCatchments(%s)', feature && feature.id);
 
       var vm = this;
 
@@ -704,6 +707,13 @@ var app = window.app = new Vue({
         })
         .then(function (response) {
           vm.$set(vm.state.map, 'catchmentLayer', response.data.data);
+
+          vm.state.map.getFeatureValue = function () { return null; };
+          vm.state.map.getCatchmentValue = function (id) {
+            return vm.xf.hasCatchment(id) ? vm.xf.getCatchmentValue(id, vm.state.variable) : null;
+          };
+
+          // TODO: filter xf for current huc to update filter charts
         })
         .catch(function (response) {
           console.log('error', response);
@@ -711,11 +721,6 @@ var app = window.app = new Vue({
         .finally(function () {
           this.setStatus();
         });
-
-      // zoom to feature boundary
-      // update map mode to catchments
-      // change state.map.getFeatureValue to get catchment values
-      // filter xf for current huc to update filter charts
     },
     downloadAggregationLayer: function () {
       var vm = this;
