@@ -164,6 +164,7 @@ module.exports = function (data) {
 
     var dim = _dims[id];
 
+    // dim.dimension.filterAll();
     dim.dimension.dispose();
     dim.group.dispose();
     delete _dims[id];

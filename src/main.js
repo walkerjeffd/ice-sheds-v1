@@ -17,6 +17,7 @@ Vue.component('ice-status', require('./components/iceStatus'));
 Vue.component('ice-select-info', require('./components/iceSelectInfo'));
 Vue.component('ice-legend', require('./components/iceLegend'));
 
+
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
 var downloadJsonFile = function (data, filename) {
@@ -194,6 +195,8 @@ var app = window.app = new Vue({
     }
   },
   mounted: function () {
+    var vm = this;
+
     // initialize share copy-to-clipboard button
     new Clipboard('.btn-copy');
 
@@ -229,6 +232,13 @@ var app = window.app = new Vue({
         return '';
       }
       return this.layer.label;
+    },
+    selectedAggregationLabel: function () {
+      if (!this.state.selected.aggregation) {
+        return 'None';
+      }
+
+      return this.state.selected.aggregation.id + ' | ' + this.state.selected.aggregation.properties.name;
     }
   },
   methods: {
@@ -497,6 +507,8 @@ var app = window.app = new Vue({
         if (idx >= 0) {
           this.state.filters.charts.splice(idx, 1);
         }
+
+        evt.$emit('refresh-map');
 
         this.setStatus();
       }.bind(this), 0);
