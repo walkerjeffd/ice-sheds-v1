@@ -7,10 +7,12 @@ var Vue = require('vue'),
 
 var config = require('./config');
 
+var evt = new Vue();
+
 Vue.use(VueResource);
 Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
-Vue.component('ice-map', require('./components/iceMap'));
+Vue.component('ice-map', require('./components/iceMap')(evt));
 Vue.component('ice-status', require('./components/iceStatus'));
 Vue.component('ice-select-info', require('./components/iceSelectInfo'));
 Vue.component('ice-legend', require('./components/iceLegend'));
@@ -49,8 +51,8 @@ var serialize = function (state) {
     }
   };
 
-  if (state.selected.feature) {
-    obj.selected.featureId = state.selected.feature.id;
+  if (state.selected.aggregation) {
+    obj.selected.aggregationId = state.selected.aggregation.id;
   }
 
   state.xf.filters.forEach(function (filter) {
@@ -170,6 +172,10 @@ var app = window.app = new Vue({
         filteredCount: 0
       },
       selected: {
+        count: {
+          total: 0,
+          filtered: 0
+        }
       },
       map: {
         view: {
@@ -261,6 +267,9 @@ var app = window.app = new Vue({
           vm.state.map.getFeatureValue = function (id) {
             return vm.xf.getAggregationValue(id);
           };
+          vm.state.map.getCatchmentValue = function (id) {
+            return vm.xf.hasCatchment(id) ? vm.xf.getCatchmentValue(id, vm.state.variable) : null;
+          };
 
           vm.updateState(config.state);
           vm.updateState(query);
@@ -287,7 +296,7 @@ var app = window.app = new Vue({
                 });
 
                 if (features.length > 0) {
-                  vm.selectFeature(features[0]);
+                  vm.selectAggregation(features[0]);
                 }
               }
             });
@@ -512,6 +521,10 @@ var app = window.app = new Vue({
 
       this.$set(this.state.xf.filters[idx], 'range', range);
       this.state.xf.filteredCount = this.xf.getFilteredCount();
+
+      vm.state.selected.count.filtered = this.state.selected.xf.getFilteredCount();
+
+      evt.$emit('refresh-map');
     },
     getVariableById: function (id) {
       var variable;
@@ -576,7 +589,7 @@ var app = window.app = new Vue({
 
           var geojson = topojson.feature(data, data.objects[layer.id]);
 
-          vm.selectFeature();
+          vm.selectAggregation();
 
           vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
@@ -620,7 +633,7 @@ var app = window.app = new Vue({
         this.setStatus();
       }.bind(this), 0);
     },
-    renderTooltip: function (d) {
+    aggregationTooltip: function (d) {
       // map tooltip on feature mouseover
       // d: feature object
       var layer = this.getLayerById(this.state.layer),
@@ -629,14 +642,24 @@ var app = window.app = new Vue({
 
       return '<span>' + layer.label + ': ' + d.id + ' | ' + d.properties.name + '</span><br><span>' + this.variable.label + ' = ' + format(value) + '</span>';
     },
-    selectFeature: function (feature) {
+    catchmentTooltip: function (d) {
+      // map tooltip on catchment mouseover
+      // d: catchment object
+      var format = d3.format(this.variable.format),
+          value = this.xf.getCatchmentValue(d.id, this.state.variable);
+
+      return '<span>Catchment: ' + d.id + '</span><br>' +
+        '<span>' + this.variable.label + ' = ' + format(value) + '</span>';
+    },
+    selectAggregation: function (feature) {
       var vm = this;
       if (feature) {
-        console.log('app:selectFeature(' + feature.id + ') create');
+        // selecting new aggregation feature
+        console.log('app:selectAggregation(' + feature.id + ') select');
         vm.setStatus('Selecting feature...');
 
         setTimeout(function () {
-          vm.$set(vm.state.selected, 'feature', feature);
+          vm.$set(vm.state.selected, 'aggregation', feature);
 
           // create new crossfilter using only data for selected feature
           var subset = vm.xf.data().filter(function (d) {
@@ -644,6 +667,8 @@ var app = window.app = new Vue({
           });
           var xf = IceCrossfilter().data(subset);
           vm.$set(vm.state.selected, 'xf', xf);
+          vm.$set(vm.state.selected.count, 'total', subset.length);
+          vm.$set(vm.state.selected.count, 'filtered', vm.state.selected.xf.getFilteredCount());
 
           // add categorical dimensions
           if (vm.dataset.config.region) {
@@ -658,32 +683,44 @@ var app = window.app = new Vue({
               return xf.getDim(filter.id);
             };
           });
+
           vm.setStatus();
         }, 0);
-      } else if (vm.state.selected.feature) {
-        console.log('app:selectFeature(' + vm.state.selected.feature.id + ') destroy');
+      } else if (vm.state.selected.aggregation) {
+        console.log('app:selectAggregation(' + vm.state.selected.aggregation.id + ') unselect');
         vm.setStatus('Unselecting feature...');
         setTimeout(function () {
           vm.state.selected.xf.destroy();
           vm.state.xf.filters.forEach(function (filter) {
             filter.getSelectedDim = function () { return; };
           });
-          vm.$delete(vm.state.selected, 'feature');
+          vm.$delete(vm.state.selected, 'aggregation');
+          vm.$delete(vm.state.selected, 'catchment');
           vm.$delete(vm.state.selected, 'xf');
+          vm.$set(vm.state.selected.count, 'total', 0);
+          vm.$set(vm.state.selected.count, 'filtered', 0);
+
+          vm.$delete(vm.state.map, 'catchmentLayer');
+          vm.xf.setAggFilter();
           vm.setStatus();
         }, 0);
+      } else {
+        console.log('app:selectAggregation() no change');
+      }
+    },
+    selectCatchment: function (feature) {
+      if (feature) {
+        console.log('app:selectCatchment(' + feature.id + ') select');
+        this.$set(this.state.selected, 'catchment', feature);
+      } else if (this.state.selected.catchment) {
+        console.log('app:selectCatchment(' + this.state.selected.catchment.id + ') unselect');
+        this.$delete(this.state.selected, 'catchment');
+      } else {
+        console.log('app:selectCatchment() no change');
       }
     },
     setStatus: function (message) {
       this.state.message = message;
-    },
-    share: function () {
-      var query = serialize(this.state),
-          url = location.origin + location.pathname + '?' + query;
-
-      this.shareUrl = url;
-
-      $('#modal-share').modal('show')
     },
     updateAggregation: function (layer, variable) {
       console.log('app:updateAggregation()', layer, variable);
@@ -695,6 +732,8 @@ var app = window.app = new Vue({
       console.log('app:zoomToCatchments(%s)', feature && feature.id);
 
       var vm = this;
+
+      vm.show.loading = true;
 
       this.setStatus('Zooming to catchments...');
 
@@ -708,10 +747,7 @@ var app = window.app = new Vue({
         .then(function (response) {
           vm.$set(vm.state.map, 'catchmentLayer', response.data.data);
 
-          vm.state.map.getFeatureValue = function () { return null; };
-          vm.state.map.getCatchmentValue = function (id) {
-            return vm.xf.hasCatchment(id) ? vm.xf.getCatchmentValue(id, vm.state.variable) : null;
-          };
+          // vm.xf.setAggFilter(feature.id);
 
           // TODO: filter xf for current huc to update filter charts
         })
@@ -719,8 +755,17 @@ var app = window.app = new Vue({
           console.log('error', response);
         })
         .finally(function () {
+          vm.show.loading = false;
           this.setStatus();
         });
+    },
+    share: function () {
+      var query = serialize(this.state),
+          url = location.origin + location.pathname + '?' + query;
+
+      this.shareUrl = url;
+
+      $('#modal-share').modal('show')
     },
     downloadAggregationLayer: function () {
       var vm = this;

@@ -83,6 +83,14 @@ module.exports = function (data) {
     return xf.agg.values[id];
   }
 
+  xf.setAggFilter = function (id) {
+    if (id) {
+      xf.agg.dim.filter(id);
+    } else {
+      xf.agg.dim.filterAll();
+    }
+  }
+
   xf.getCatchmentValue = function (id, key) {
     // get catchment value by catchment id
     // id: catchment id

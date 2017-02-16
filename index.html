@@ -74,10 +74,10 @@
       </div>
       <div class="ice-box">
         <div class="ice-box-title">Debug</div>
-<!-- <pre>
-data.count: {{dataset.count}}
-state.xf.filteredCount: {{state.xf.filteredCount}}
-</pre> -->
+<pre>
+state.selected.aggregation: {{state.selected.aggregation && state.selected.aggregation.id}}
+state.selected.catchment: {{state.selected.catchment && state.selected.catchment.id}}
+</pre>
 
       </div>
     </div>
@@ -95,6 +95,7 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
           multiple="true">
         </select-picker>
         <div class="text-right" class="margin-top:5px">{{state.xf.filteredCount | number}} of {{dataset.count | number}} catchments filtered</div>
+        <div class="text-right" v-show="state.selected.aggregation">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} within selected HUC</div>
         <hr>
         <div
           is="ice-filter"
@@ -115,27 +116,29 @@ state.xf.filteredCount: {{state.xf.filteredCount}}
     <ice-status :message="state.message" v-show="state.message"></ice-status>
     <ice-select-info
       :feature-type="featureType"
-      :feature="state.selected.feature"
-      v-show="state.selected.feature"
-      v-on:unselect="selectFeature"
+      :feature="state.selected.aggregation"
+      v-show="state.selected.aggregation"
+      v-on:unselect="selectAggregation"
       v-on:zoom="zoomToCatchments">
     </ice-select-info>
     <ice-map
       :center="state.map.view.center"
       :zoom="state.map.view.zoom"
+      :set-view="setMapView"
       :basemaps="config.map.basemaps"
       :overlays="config.map.overlays"
+      :variable="variable"
+      :color-scale="colorScale"
       :layer="state.map.aggregationLayer"
       :catchment-layer="state.map.catchmentLayer"
-      :variable="variable"
+      :selected-aggregation="state.selected.aggregation"
+      :selected-catchment="state.selected.catchment"
       :get-feature-value="state.map.getFeatureValue"
       :get-catchment-value="state.map.getCatchmentValue"
-      :color-scale="colorScale"
-      :render-tooltip="renderTooltip"
-      :set-view="setMapView"
-      :filters="state.xf"
-      :selected="state.selected.feature"
-      v-on:select="selectFeature">
+      :aggregation-tooltip="aggregationTooltip"
+      :catchment-tooltip="catchmentTooltip"
+      v-on:select-aggregation="selectAggregation"
+      v-on:select-catchment="selectCatchment">
     </ice-map>
     <div class="ice-loading" v-show="show.loading">
       <h1>Loading</h1>
