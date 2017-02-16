@@ -183,7 +183,7 @@ var app = window.app = new Vue({
           zoom: 6
         },
         aggregationLayer: undefined,
-        getFeatureValue: function () { return null; },
+        getAggregationValue: function () { return null; },
         getCatchmentValue: function () { return null; }
       }
     },
@@ -264,7 +264,7 @@ var app = window.app = new Vue({
 
           vm.state.xf.filteredCount = vm.xf.getFilteredCount();
 
-          vm.state.map.getFeatureValue = function (id) {
+          vm.state.map.getAggregationValue = function (id) {
             return vm.xf.getAggregationValue(id);
           };
           vm.state.map.getCatchmentValue = function (id) {
@@ -522,7 +522,9 @@ var app = window.app = new Vue({
       this.$set(this.state.xf.filters[idx], 'range', range);
       this.state.xf.filteredCount = this.xf.getFilteredCount();
 
-      vm.state.selected.count.filtered = this.state.selected.xf.getFilteredCount();
+      if (this.state.selected.xf) {
+        vm.state.selected.count.filtered = this.state.selected.xf.getFilteredCount();
+      }
 
       evt.$emit('refresh-map');
     },
@@ -635,77 +637,110 @@ var app = window.app = new Vue({
     },
     aggregationTooltip: function (d) {
       // map tooltip on feature mouseover
-      // d: feature object
+      // d: aggregation feature object
       var layer = this.getLayerById(this.state.layer),
           format = d3.format(this.variable.format),
-          value = this.xf.getAggregationValue(d.id);
+          value = this.state.map.getAggregationValue(d.id),
+          formattedValue = value === null ? 'N/A' : format(value);
 
-      return '<span>' + layer.label + ': ' + d.id + ' | ' + d.properties.name + '</span><br><span>' + this.variable.label + ' = ' + format(value) + '</span>';
+      return '<span>' + layer.label + ': ' + d.id + ' | ' + d.properties.name + '</span><br><span>' + this.variable.label + ' = ' + formattedValue + '</span>';
     },
     catchmentTooltip: function (d) {
       // map tooltip on catchment mouseover
-      // d: catchment object
+      // d: catchment feature object
       var format = d3.format(this.variable.format),
-          value = this.xf.getCatchmentValue(d.id, this.state.variable);
+          value = this.state.map.getCatchmentValue(d.id),
+          formattedValue = value === null ? 'N/A' : format(value);
 
       return '<span>Catchment: ' + d.id + '</span><br>' +
-        '<span>' + this.variable.label + ' = ' + format(value) + '</span>';
+        '<span>' + this.variable.label + ' = ' + formattedValue + '</span>';
     },
     selectAggregation: function (feature) {
       var vm = this;
       if (feature) {
-        // selecting new aggregation feature
-        console.log('app:selectAggregation(' + feature.id + ') select');
-        vm.setStatus('Selecting feature...');
+        // select
 
-        setTimeout(function () {
-          vm.$set(vm.state.selected, 'aggregation', feature);
+        if (!vm.state.selected.aggregation || feature.id !== vm.state.selected.aggregation.id) {
+          // selecting new feature
+          console.log('app:selectAggregation(' + feature.id + ') select');
+          vm.setStatus('Selecting feature...');
 
-          // create new crossfilter using only data for selected feature
-          var subset = vm.xf.data().filter(function (d) {
-            return d[vm.state.layer] === feature.id;
-          });
-          var xf = IceCrossfilter().data(subset);
-          vm.$set(vm.state.selected, 'xf', xf);
-          vm.$set(vm.state.selected.count, 'total', subset.length);
-          vm.$set(vm.state.selected.count, 'filtered', vm.state.selected.xf.getFilteredCount());
+          setTimeout(function () {
+            vm.$set(vm.state.selected, 'aggregation', feature);
 
-          // add categorical dimensions
-          if (vm.dataset.config.region) {
-            xf.addCategoricalDim(vm.dataset.config.region.id)
-              .setCategoricalDimFilter(vm.dataset.config.region.id, vm.state.filters.region);
-          }
+            // delete existing selected xf
+            if (vm.state.selected.xf) {
+              vm.state.selected.xf.destroy();
+              vm.$delete(vm.state.selected, 'xf');
+            }
 
-          // add filter dimensions
-          vm.state.xf.filters.forEach(function (filter) {
-            xf.addFilterDim(filter.id, filter.variable).setFilterDimRange(filter.id, filter.range);
-            filter.getSelectedDim = function () {
-              return xf.getDim(filter.id);
-            };
-          });
+            // create new crossfilter using only data for selected feature
+            var subset = vm.xf.data().filter(function (d) {
+              return d[vm.state.layer] === feature.id;
+            });
+            var xf = IceCrossfilter().data(subset);
+            vm.$set(vm.state.selected, 'xf', xf);
+            vm.$set(vm.state.selected.count, 'total', subset.length);
+            vm.$set(vm.state.selected.count, 'filtered', vm.state.selected.xf.getFilteredCount());
 
-          vm.setStatus();
-        }, 0);
-      } else if (vm.state.selected.aggregation) {
-        console.log('app:selectAggregation(' + vm.state.selected.aggregation.id + ') unselect');
-        vm.setStatus('Unselecting feature...');
-        setTimeout(function () {
-          vm.state.selected.xf.destroy();
-          vm.state.xf.filters.forEach(function (filter) {
-            filter.getSelectedDim = function () { return; };
-          });
-          vm.$delete(vm.state.selected, 'aggregation');
-          vm.$delete(vm.state.selected, 'catchment');
-          vm.$delete(vm.state.selected, 'xf');
-          vm.$set(vm.state.selected.count, 'total', 0);
-          vm.$set(vm.state.selected.count, 'filtered', 0);
+            // add categorical dimensions
+            if (vm.dataset.config.region) {
+              xf.addCategoricalDim(vm.dataset.config.region.id)
+                .setCategoricalDimFilter(vm.dataset.config.region.id, vm.state.filters.region);
+            }
 
-          vm.$delete(vm.state.map, 'catchmentLayer');
-          vm.xf.setAggFilter();
-          vm.setStatus();
-        }, 0);
+            // add filter dimensions
+            vm.state.xf.filters.forEach(function (filter) {
+              xf.addFilterDim(filter.id, filter.variable).setFilterDimRange(filter.id, filter.range);
+              filter.getSelectedDim = function () {
+                return xf.getDim(filter.id);
+              };
+            });
+
+            // delete selected catchment
+            if (vm.state.selected.catchment) {
+              vm.$delete(vm.state.selected, 'catchment');
+            }
+
+            if (vm.state.map.catchmentLayer) {
+              // replace current catchments with new catchments
+              vm.$delete(vm.state.map, 'catchmentLayer');
+
+              // // Automatically switch to catchment view on new selection??
+              // vm.zoomToCatchments(feature);
+            }
+
+            vm.setStatus();
+          }, 0);
+        } else {
+          // feature already selected, do nothing
+        }
       } else {
-        console.log('app:selectAggregation() no change');
+        // unselect
+
+        if (vm.state.selected.aggregation) {
+          // remove current selection
+          console.log('app:selectAggregation(' + vm.state.selected.aggregation.id + ') unselect');
+
+          vm.setStatus('Unselecting feature...');
+
+          setTimeout(function () {
+            vm.state.selected.xf.destroy();
+            vm.state.xf.filters.forEach(function (filter) {
+              filter.getSelectedDim = function () { return; };
+            });
+            vm.$delete(vm.state.selected, 'aggregation');
+            vm.$delete(vm.state.selected, 'catchment');
+            vm.$delete(vm.state.selected, 'xf');
+            vm.$delete(vm.state.map, 'catchmentLayer');
+            vm.$set(vm.state.selected.count, 'total', 0);
+            vm.$set(vm.state.selected.count, 'filtered', 0);
+
+            vm.setStatus();
+          }, 0);
+        } else {
+          // no current selection, do nothing
+        }
       }
     },
     selectCatchment: function (feature) {
@@ -746,13 +781,10 @@ var app = window.app = new Vue({
         })
         .then(function (response) {
           vm.$set(vm.state.map, 'catchmentLayer', response.data.data);
-
-          // vm.xf.setAggFilter(feature.id);
-
-          // TODO: filter xf for current huc to update filter charts
         })
         .catch(function (response) {
           console.log('error', response);
+          alert('Error occurred fetching catchments');
         })
         .finally(function () {
           vm.show.loading = false;

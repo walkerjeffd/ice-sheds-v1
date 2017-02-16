@@ -4,7 +4,7 @@ module.exports = {
       '<div><strong>Selected {{featureType}}:</strong> <span>{{featureLabel}}</span></div>' +
       '<div class="btn-group btn-group-xs" style="margin-top:5px">' +
         '<button class="btn btn-default" @click="unselect"><i class="fa fa-times-circle"></i> Unselect</button>' +
-        '<button class="btn btn-default" @click="zoom"><i class="fa fa-search-plus"></i> Zoom to Catchments</button>' +
+        '<button class="btn btn-default" @click="zoom"><i class="fa fa-search-plus"></i> Show Catchments</button>' +
       '</div>' +
     '</div>',
   computed: {
