@@ -595,7 +595,7 @@ var app = window.app = new Vue({
 
           vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
-          vm.xf.updateStats(id, vm.dataset.config.variables);
+          // vm.xf.updateStats(id, vm.dataset.config.variables);
 
           vm.setStatus();
           vm.show.loading = false;
