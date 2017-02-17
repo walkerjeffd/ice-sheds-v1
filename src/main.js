@@ -216,7 +216,22 @@ var app = window.app = new Vue({
   },
   computed: {
     variable: function () {
-      return this.getVariableById(this.state.variable);
+      if (this.state.variable === '*area') {
+        return {
+          "id": "*area",
+          "label": "% Area Filtered",
+          "min": 0,
+          "max": 1,
+          "scale": 1,
+          "interval": 0.025,
+          "format": {
+            "value": "%",
+            "axis": "%"
+          }
+        };
+      } else {
+        return this.getVariableById(this.state.variable);
+      }
     },
     layer: function () {
       return this.getLayerById(this.state.layer);
@@ -282,7 +297,11 @@ var app = window.app = new Vue({
             return vm.xf.getAggregationValue(id);
           };
           vm.state.map.getCatchmentValue = function (id) {
-            return vm.xf.hasCatchment(id) ? vm.xf.getCatchmentValue(id, vm.state.variable) : null;
+            if (vm.state.variable === '*area') {
+              return vm.xf.hasCatchment(id) ? 1 : 0;
+            } else {
+              return vm.xf.hasCatchment(id) ? vm.xf.getCatchmentValue(id, vm.state.variable) : null;
+            }
           };
 
           vm.updateState(config.state);
@@ -359,14 +378,21 @@ var app = window.app = new Vue({
             label: d.label
           };
         });
-      vm.config.variable.options = config.variables.filter(function (d) {
+
+      var variableOptions = [{
+        id: '*area',
+        label: '% Area Filtered'
+      }];
+      config.variables.filter(function (d) {
           return d.aggregation;
-        }).map(function (d) {
-          return {
+        })
+        .forEach(function (d) {
+          variableOptions.push({
             id: d.id,
             label: d.label
-          };
+          });
         });
+      vm.config.variable.options = variableOptions;
 
       if (config.region) {
         vm.config.filters.region.options = config.region.options.map(function (d) {
@@ -515,7 +541,9 @@ var app = window.app = new Vue({
         }
 
         this.state.xf.count.filtered = this.xf.getFilteredCount();
-        vm.state.selected.count.filtered = vm.state.selected.xf.getFilteredCount();
+        if (vm.state.selected.xf) {
+          vm.state.selected.count.filtered = vm.state.selected.xf.getFilteredCount();
+        }
 
         evt.$emit('refresh-map');
 

@@ -1,7 +1,14 @@
 var crossfilter = require('crossfilter');
 
 module.exports = function (data) {
-  var xf = {}, _dims = {}, _data, _area, _idColumn, _stats, _features = {};
+  var xf = {},
+      _dims = {},
+      _data,
+      _areas = d3.map(),
+      _areaColumn,
+      _idColumn,
+      _stats,
+      _features = {};
 
   xf.data = function (_) {
     // get/set dataset
@@ -20,48 +27,62 @@ module.exports = function (data) {
 
   xf.areaColumn = function (_) {
     // get/set catchment area column
-    if (!arguments.length) return _area;
-    _area = _;
+    if (!arguments.length) return _areaColumn;
+    _areaColumn = _;
     return xf;
   }
 
-  xf.setAggregation = function (key, value) {
+  xf.setAggregation = function (groupBy, variable) {
     // set aggregation dimension
-    // key: aggregation key (e.g. huc8)
-    // value: aggregation variable (e.g. elevation)
-    console.log('xf:setAggregation(%s, %s)', key, value);
+    // groupBy: aggregation groupBy (e.g. huc8)
+    // variable: aggregation variable (e.g. elevation)
+    console.log('xf:setAggregation(%s, %s)', groupBy, variable);
+
+    // update areas if new groupBy
+    if (!xf.agg || xf.agg.groupBy !== groupBy) {
+      _areas = d3.nest()
+        .key(function (d) { return d[groupBy]; })
+        .rollup(function (leaves) {
+          return {
+            count: leaves.length,
+            area: d3.sum(leaves, function (d) { return d[_areaColumn]; })
+          };
+        })
+        .map(_data, d3.map);
+    }
 
     if (xf.agg && xf.agg.dim) {
       xf.agg.dim.dispose();
       xf.agg.group.dispose();
     }
 
-    if (!_area) {
+    if (!_areaColumn) {
       console.error('Missing area column in IceCrossfilter');
       return;
     }
 
     xf.agg = {};
-    xf.agg.key = key;
+    xf.agg.groupBy = groupBy;
+    xf.agg.variable = variable;
     xf.agg.dim = xf.ndx.dimension(function (d) {
-      return d[key];
+      return d[groupBy];
     });
 
     xf.agg.group = xf.agg.dim.group().reduce(
       function reduceAdd(p, v) {
-        if (v[value] !== null) {
+        if (v[variable] !== null) {
           p.count += 1;
-          p.sum += v[value]*v[_area];
-          p.area += v[_area];
+          p.sum += v[variable]*v[_areaColumn];
+          p.area += v[_areaColumn];
           p.mean = p.count >= 1 ? p.sum/p.area : null;
         }
         return p ;
       },
       function reduceRemove(p, v) {
-        if (v[value] !== null) {
+        if (v[variable] !== null) {
           p.count -= 1;
-          p.sum -= v[value]*v[_area];
-          p.area -= v[_area];
+          p.sum -= v[variable]*v[_areaColumn];
+          p.area -= v[_areaColumn];
           p.mean = p.count >= 1 ? p.sum/p.area : null;
         }
         return p;
@@ -91,11 +112,11 @@ module.exports = function (data) {
     }
   }
 
-  xf.getCatchmentValue = function (id, key) {
+  xf.getCatchmentValue = function (id, variable) {
     // get catchment value by catchment id
     // id: catchment id
-    // key: (optional) variable key, if undefined returns catchment object
-    return key ? _features.map.get(id)[key] : _features.map.get(id);
+    // variable: (optional) variable, if undefined returns catchment object
+    return variable ? _features.map.get(id)[variable] : _features.map.get(id);
   }
 
   xf.hasCatchment = function (id) {
@@ -217,7 +238,7 @@ module.exports = function (data) {
     // compute area weighted mean of all variables by column key
     console.log('xf:updateStats(%s)', key, variables);
 
-    var areaKey = _area,
+    var areaKey = _areaColumn,
         data = _data;
 
     var variableKeys = variables.map(function(d) { return d.id; })
@@ -324,11 +345,19 @@ module.exports = function (data) {
   function updateValues() {
     // console.log('xf:updateValues()');
     if (!xf.agg) return;
-    var dim = xf.agg;
+    var dim = xf.agg,
+        groupBy = xf.agg.groupBy,
+        variable = xf.agg.variable;
 
-    dim.group.all().forEach(function(d) {
-      dim.values[d.key] = d.value.count > 0 && d.value.area > 0 ? d.value.mean : null;
-    });
+    if (variable === '*area') {
+      dim.group.all().forEach(function(d) {
+        dim.values[d.key] = d.value.area / _areas.get(d.key).area;
+      });
+    } else {
+      dim.group.all().forEach(function(d) {
+        dim.values[d.key] = d.value.count > 0 && d.value.area > 0 ? d.value.mean : null;
+      });
+    }
   }
 
   return xf;
