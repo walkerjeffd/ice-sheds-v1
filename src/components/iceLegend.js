@@ -57,7 +57,7 @@ module.exports = {
         return noop;
       }
 
-      return d3.format(this.variable.format);
+      return d3.format(this.variable.format.axis);
     }
   },
   methods: {

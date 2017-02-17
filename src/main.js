@@ -14,7 +14,8 @@ Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
 Vue.component('ice-map', require('./components/iceMap')(evt));
 Vue.component('ice-status', require('./components/iceStatus'));
-Vue.component('ice-select-info', require('./components/iceSelectInfo'));
+Vue.component('ice-select-info-aggregation', require('./components/iceSelectInfoAggregation'));
+Vue.component('ice-select-info-catchment', require('./components/iceSelectInfoCatchment'));
 Vue.component('ice-legend', require('./components/iceLegend'));
 
 
@@ -659,7 +660,7 @@ var app = window.app = new Vue({
       // map tooltip on feature mouseover
       // d: aggregation feature object
       var layer = this.getLayerById(this.state.layer),
-          format = d3.format(this.variable.format),
+          format = d3.format(this.variable.format.value),
           value = this.state.map.getAggregationValue(d.id),
           formattedValue = value === null ? 'N/A' : format(value);
 
@@ -668,7 +669,7 @@ var app = window.app = new Vue({
     catchmentTooltip: function (d) {
       // map tooltip on catchment mouseover
       // d: catchment feature object
-      var format = d3.format(this.variable.format),
+      var format = d3.format(this.variable.format.value),
           value = this.state.map.getCatchmentValue(d.id),
           formattedValue = value === null ? 'N/A' : format(value);
 

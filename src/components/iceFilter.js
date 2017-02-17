@@ -56,7 +56,7 @@ module.exports = {
       y: d3.scale.linear().range([this.height, 0])
     };
     this.axes = {
-      x: d3.svg.axis().orient("bottom").scale(this.scales.x)
+      x: d3.svg.axis().orient("bottom").scale(this.scales.x).tickFormat(d3.format(this.variable.format.axis))
     };
     this.brush = d3.svg.brush().x(this.scales.x);
 
@@ -102,7 +102,7 @@ module.exports = {
   },
   computed: {
     rangeLabel: function () {
-      var formatter = d3.format(this.variable.format);
+      var formatter = d3.format(this.variable.format.value);
 
       return this.range && this.range.length == 2 ?
         formatter(this.range[0]) + ' - ' + formatter(this.range[1]) :
@@ -111,12 +111,8 @@ module.exports = {
   },
   watch: {
     selected: function () {
-      // console.log('filter(' + this.id + '):watch selected');
       this.render();
     }
-    // range: function () {
-      // console.log('filter(' + this.id + '):watch range', this.range);
-    // }
   },
   methods: {
     drawBrush: function () {
