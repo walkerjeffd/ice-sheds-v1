@@ -640,11 +640,16 @@ var app = window.app = new Vue({
 
           var geojson = topojson.feature(data, data.objects[layer.id]);
 
+          if (vm.state.map.catchmentLayer)
+
+          vm.selectCatchment();
           vm.selectAggregation();
 
           vm.state.map.aggregationLayer = geojson;
           vm.updateAggregation(id, vm.state.variable);
           // vm.xf.updateStats(id, vm.dataset.config.variables);
+
+          vm.$delete(vm.state.map, 'catchmentLayer');
 
           vm.setStatus();
           vm.show.loading = false;

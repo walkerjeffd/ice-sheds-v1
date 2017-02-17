@@ -219,8 +219,12 @@ module.exports = function (data) {
     // dim.dimension.filterAll();
     dim.dimension.dispose();
     dim.group.dispose();
-    dim.stats.dimension.dispose();
-    dim.stats.group.dispose();
+
+    if (dim.stats) {
+      dim.stats.dimension.dispose();
+      dim.stats.group.dispose();
+    }
+
     delete _dims[id];
 
     updateValues();
