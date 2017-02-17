@@ -165,7 +165,7 @@ module.exports = function (data) {
     var dim = _dims[id] = {};
 
     dim.dimension = xf.ndx.dimension(function(d) {
-      return d[id] === null ? -1 : d[id];
+      return d[id] === null ? -Infinity : d[id];
     });
 
     dim.group = dim.dimension
@@ -179,7 +179,7 @@ module.exports = function (data) {
     // secondary dimension to get variable stats
     // filter is applied to this dimension
     dim.stats.dimension = xf.ndx.dimension(function(d) {
-      return d[id] === null ? -1 : d[id];
+      return d[id] === null ? -Infinity : d[id];
     });
 
     dim.stats.group = dim.stats.dimension

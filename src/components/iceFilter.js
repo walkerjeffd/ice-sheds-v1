@@ -149,7 +149,7 @@ module.exports = {
 
       var dim = this.getDim(),
           groups = dim.group.all();
-      if (groups[0].key < 0) {
+      if (!isFinite(groups[0].key)) {
         groups = groups.slice(1, groups.length);
       }
 
