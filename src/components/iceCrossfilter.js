@@ -352,6 +352,76 @@ module.exports = function (data) {
     return _stats[id];
   }
 
+  xf.getAreaById = function (id) {
+    return _areas.get(id);
+  }
+
+  xf.computeStats = function (id, variables) {
+    console.log('xf: computeStats(%s, n=%d)', id, variables.length);
+
+    var data = _data.filter(function (d) {
+      return d[xf.agg.groupBy] === id;
+    });
+
+    var variableKeys = variables.map(function(d) { return d.id; })
+
+    var ndx = crossfilter(data);
+    var dim = ndx.dimension(function (d) {
+      return d[xf.agg.groupBy];
+    });
+
+    var group = dim.group().reduce(
+      function reduceAdd(p, v) {
+        variableKeys.forEach(function (key) {
+          if (v[key] != null) {
+            p[key].count += 1;
+            p[key].area += v[_areaColumn];
+            p[key].sum += v[key]*v[_areaColumn];
+            p[key].mean = p[key].count >= 1 ? p[key].sum/p[key].area : null;
+          }
+        });
+        return p ;
+      },
+      function reduceRemove(p, v) {
+        variableKeys.forEach(function (key) {
+          if (v[key] != null) {
+            p[key].count -= 1;
+            p[key].area -= v[_areaColumn];
+            p[key].sum -= v[key]*v[_areaColumn];
+            p[key].mean = p[key].count >= 1 ? p[key].sum/p[key].area : null;
+          }
+        });
+        return p;
+      },
+      function reduceInit(p, v) {
+        var initial = {};
+
+        variableKeys.forEach(function (key) {
+          initial[key] = {
+            count: 0,
+            area: 0,
+            sum: 0,
+            mean: null
+          };
+        });
+        return initial;
+      }
+    );
+
+    var stats = {},
+        value = group.all()[0].value;
+
+    variables.forEach(function(variable) {
+      stats[variable.id] = value[variable.id].mean;
+    });
+
+    dim.dispose();
+    group.dispose();
+    delete ndx;
+
+    return stats;
+  }
+
   function loadData (data) {
     console.log('xf:loadData(n=%s)', data.length);
     xf.ndx = crossfilter(data);

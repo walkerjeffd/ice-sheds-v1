@@ -14,10 +14,9 @@ Vue.component('select-picker', require('./components/selectPicker'));
 Vue.component('ice-filter', require('./components/iceFilter'));
 Vue.component('ice-map', require('./components/iceMap')(evt));
 Vue.component('ice-status', require('./components/iceStatus'));
-Vue.component('ice-select-info-aggregation', require('./components/iceSelectInfoAggregation'));
-Vue.component('ice-select-info-catchment', require('./components/iceSelectInfoCatchment'));
+Vue.component('ice-select-aggregation', require('./components/iceSelectAggregation'));
+Vue.component('ice-select-catchment', require('./components/iceSelectCatchment'));
 Vue.component('ice-legend', require('./components/iceLegend'));
-
 
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
@@ -85,7 +84,7 @@ var deserialize = function (query) {
   return parsed;
 };
 
-var numberFormat = d3.format(',');
+var numberFormat = d3.format(',.0f');
 
 var app = window.app = new Vue({
   el: '#app',
@@ -752,6 +751,7 @@ var app = window.app = new Vue({
             // update counts
             vm.$set(vm.state.selected.count, 'total', subset.length);
             vm.$set(vm.state.selected.count, 'filtered', vm.state.selected.xf.getFilteredCount());
+            vm.$set(vm.state.selected, 'stats', vm.xf.getAreaById(feature.id));
 
             // delete selected catchment
             if (vm.state.selected.catchment) {
@@ -853,7 +853,48 @@ var app = window.app = new Vue({
 
       this.shareUrl = url;
 
-      $('#modal-share').modal('show')
+      $('#modal-share').modal('show');
+    },
+    showInfoAggregation: function (feature) {
+      var vm = this,
+          variables = vm.dataset.config.variables;
+
+      this.setStatus('Opening info...');
+
+      setTimeout(function () {
+        var values = vm.xf.computeStats(feature.id, variables);
+
+        vm.state.selected.variableStats = {};
+        variables.forEach(function (variable) {
+            var formatter = d3.format(variable.format.value),
+                value = values[variable.id];
+            vm.state.selected.variableStats[variable.id] = value === null ? 'N/A' : formatter(values[variable.id]);
+          });
+        $('#modal-info-aggregation').modal('show');
+
+        this.setStatus();
+      }.bind(this), 0);
+    },
+    showInfoCatchment: function (feature) {
+      var vm = this,
+          variables = vm.dataset.config.variables;
+
+      this.setStatus('Opening info...');
+
+      setTimeout(function () {
+        var values = vm.xf.getCatchmentValue(feature.id);
+        vm.$set(vm.state.selected, 'catchmentStats', {});
+
+        vm.state.selected.catchmentStats = {};
+        variables.forEach(function (variable) {
+            var formatter = d3.format(variable.format.value),
+                value = values[variable.id];
+            vm.state.selected.catchmentStats[variable.id] = value === null ? 'N/A' : formatter(values[variable.id]);
+          });
+        $('#modal-info-catchment').modal('show');
+
+        this.setStatus();
+      }.bind(this), 0);
     },
     downloadAggregationLayer: function () {
       var vm = this;

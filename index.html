@@ -113,18 +113,20 @@
       </div>
     </div>
     <ice-status :message="state.message" v-show="state.message"></ice-status>
-    <ice-select-info-aggregation
+    <ice-select-aggregation
       :feature-type="featureType"
       :feature="state.selected.aggregation"
       v-if="state.selected.aggregation"
       v-on:unselect="selectAggregation"
-      v-on:zoom="zoomToCatchments">
-    </ice-select-info-aggregation>
-    <ice-select-info-catchment
+      v-on:catchments="zoomToCatchments"
+      v-on:info="showInfoAggregation">
+    </ice-select-aggregation>
+    <ice-select-catchment
       :feature="state.selected.catchment"
       v-if="state.selected.catchment"
-      v-on:unselect="selectCatchment">
-    </ice-select-info-catchment>
+      v-on:unselect="selectCatchment"
+      v-on:info="showInfoCatchment">
+    </ice-select-catchment>
     <ice-map
       :center="state.map.view.center"
       :zoom="state.map.view.zoom"
@@ -201,7 +203,85 @@
       </div>
     </div>
   </div>
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal-info-aggregation">
+    <div class="modal-dialog" role="document" style="overflow-y: initial">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Selected HUC Info</h4>
+        </div>
+        <div class="modal-body" style="height: 430px;overflow-y: auto;">
+          <div class="row">
+            <div v-if="state.selected.aggregation" class="col-xs-12">
+              <p>
+                <strong>{{featureType}}: {{state.selected.aggregation.id}} - {{state.selected.aggregation.properties.name}}</strong><br>
+                {{state.selected.stats.count | number}} catchments ({{state.selected.stats.area | number}} sq km)
+              </p>
+              <p>This table lists the area-weighted mean value for the selected HUC. These values include all catchments and thus <em>are not</em> affected by current filters.</p>
+              <table class="table table-condensed table-striped" v-if="dataset.config.variables && state.selected.variableStats">
+                <thead>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </thead>
+                <tbody>
+                  <tr v-for="variable in dataset.config.variables">
+                    <td>{{variable.label}}</td>
+                    <td>{{state.selected.variableStats[variable.id]}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="col-xs-12">
+              No HUC is selected
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal-info-catchment">
+    <div class="modal-dialog" role="document" style="overflow-y: initial">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Selected Catchment Info</h4>
+        </div>
+        <div class="modal-body" style="height: 430px;overflow-y: auto;">
+          <div class="row">
+            <div v-if="state.selected.catchment" class="col-xs-12">
+              <p>
+                <strong>Catchment: {{state.selected.catchment.id}}</strong>
+              </p>
+              <table class="table table-condensed table-striped" v-if="dataset.config.variables && state.selected.catchmentStats">
+                <thead>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </thead>
+                <tbody>
+                  <tr v-for="variable in dataset.config.variables">
+                    <td>{{variable.label}}</td>
+                    <td>{{state.selected.catchmentStats[variable.id]}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="col-xs-12">
+              No catchment is selected
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+</script>
 
 <script src="bower_components/jquery/dist/jquery.js"></script>
 <script src="http://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>

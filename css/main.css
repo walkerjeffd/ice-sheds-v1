@@ -77,10 +77,9 @@
 }
 
 /* Select Info */
-.ice-select-info {
+.ice-select-box {
   position: absolute;
   right: 435px;
-  top: 70px;
   padding: 5px 5px;
   background: #fff;
   font-size: 12px;
@@ -89,12 +88,21 @@
   z-index: 1000;
 }
 
-.ice-select-info.catchment {
+.ice-select-box.aggregation {
+  top: 70px;
+}
+
+.ice-select-box.catchment {
   top: 140px;
 }
 
-.ice-select-info-title {
+.ice-select-box-title {
   font-size: 1.2em;
+}
+
+.ice-select-box-body {
+  width: 100%;
+  margin-top: 5px;
 }
 
 /* Legend */
