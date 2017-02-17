@@ -170,7 +170,10 @@ var app = window.app = new Vue({
       },
       xf: {
         filters: [],
-        filteredCount: 0
+        count: {
+          total: 0,
+          filtered: 0
+        }
       },
       selected: {
         count: {
@@ -260,7 +263,6 @@ var app = window.app = new Vue({
         .then(function (data) {
           var config = vm.dataset.config;
 
-          vm.dataset.count = data.length;
           vm.dataset.loaded = true;
 
           vm.xf
@@ -272,7 +274,8 @@ var app = window.app = new Vue({
             vm.xf.addCategoricalDim(config.region.id);
           }
 
-          vm.state.xf.filteredCount = vm.xf.getFilteredCount();
+          vm.state.xf.count.total = data.length;
+          vm.state.xf.count.filtered = vm.xf.getFilteredCount();
 
           vm.state.map.getAggregationValue = function (id) {
             return vm.xf.getAggregationValue(id);
@@ -484,6 +487,8 @@ var app = window.app = new Vue({
     removeFilter: function (id) {
       console.log('app:removeFilter()', id);
 
+      var vm = this;
+
       this.setStatus('Removing filter...');
 
       setTimeout(function () {
@@ -507,6 +512,9 @@ var app = window.app = new Vue({
         if (idx >= 0) {
           this.state.filters.charts.splice(idx, 1);
         }
+
+        this.state.xf.count.filtered = this.xf.getFilteredCount();
+        vm.state.selected.count.filtered = vm.state.selected.xf.getFilteredCount();
 
         evt.$emit('refresh-map');
 
@@ -532,7 +540,7 @@ var app = window.app = new Vue({
       }
 
       this.$set(this.state.xf.filters[idx], 'range', range);
-      this.state.xf.filteredCount = this.xf.getFilteredCount();
+      this.state.xf.count.filtered = this.xf.getFilteredCount();
 
       if (this.state.selected.xf) {
         vm.state.selected.count.filtered = this.state.selected.xf.getFilteredCount();
@@ -692,8 +700,6 @@ var app = window.app = new Vue({
             });
             var xf = IceCrossfilter().data(subset);
             vm.$set(vm.state.selected, 'xf', xf);
-            vm.$set(vm.state.selected.count, 'total', subset.length);
-            vm.$set(vm.state.selected.count, 'filtered', vm.state.selected.xf.getFilteredCount());
 
             // add categorical dimensions
             if (vm.dataset.config.region) {
@@ -708,6 +714,10 @@ var app = window.app = new Vue({
                 return xf.getDim(filter.id);
               };
             });
+
+            // update counts
+            vm.$set(vm.state.selected.count, 'total', subset.length);
+            vm.$set(vm.state.selected.count, 'filtered', vm.state.selected.xf.getFilteredCount());
 
             // delete selected catchment
             if (vm.state.selected.catchment) {

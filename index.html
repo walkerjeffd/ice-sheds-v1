@@ -93,7 +93,7 @@
           title="Select filter variables..."
           multiple="true">
         </select-picker>
-        <div class="text-right" class="margin-top:5px">{{state.xf.filteredCount | number}} of {{dataset.count | number}} catchments filtered</div>
+        <div class="text-right" class="margin-top:5px">{{state.xf.count.filtered | number}} of {{state.xf.count.total | number}} catchments filtered</div>
         <div class="text-right" v-show="state.selected.aggregation">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} within selected HUC</div>
         <hr>
         <div
