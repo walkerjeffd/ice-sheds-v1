@@ -168,9 +168,40 @@ module.exports = function (data) {
       return d[id] === null ? -1 : d[id];
     });
 
-    dim.group = dim.dimension.group(function(d) {
-      return d >= variable.max ? variable.max - variable.interval : Math.floor(d/variable.interval) * variable.interval;
+    dim.group = dim.dimension
+      .group(function(d) {
+        return d >= variable.max ? variable.max - variable.interval : Math.floor(d/variable.interval) * variable.interval;
+      });
+
+
+    dim.stats = {};
+
+    // secondary dimension to get variable stats
+    // filter is applied to this dimension
+    dim.stats.dimension = xf.ndx.dimension(function(d) {
+      return d[id] === null ? -1 : d[id];
     });
+
+    dim.stats.group = dim.stats.dimension
+      .groupAll()
+      .reduce(
+        function (p, v, nf) {
+          p.count += 1;
+          p.sum += v[id];
+          return p;
+        },
+        function (p, v, nf) {
+          p.count -= 1;
+          p.sum -= v[id];
+          return p;
+        },
+        function () {
+          return {
+            count: 0,
+            sum : 0
+          };
+        }
+      );
 
     return xf;
   }
@@ -349,6 +380,7 @@ module.exports = function (data) {
         groupBy = xf.agg.groupBy,
         variable = xf.agg.variable;
 
+    // update aggregation values
     if (variable === '*area') {
       dim.group.all().forEach(function(d) {
         dim.values[d.key] = d.value.area / _areas.get(d.key).area;

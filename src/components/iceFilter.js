@@ -2,12 +2,24 @@ module.exports = {
   props: ['id', 'range', 'variable', 'filters', 'selected', 'getDim', 'getSelectedDim'],
   template: '<div class="ice-filter">' +
       '<div class="title">{{variable.label}} <a class="reset" style="display: none;">reset</a><div class="btn btn-default btn-xs pull-right" v-on:click="destroy">×</div></div>' +
-      '<div class="stats"><span class="extent">{{rangeLabel}}</span></div>' +
+      '<div class="stats">' +
+        '<span class="extent">{{rangeLabel}}</span> ' +
+        '<span class="pull-right">Mean: {{stats.mean === null ? "N/A" : valueFormat(stats.mean)}}</span>' +
+      '</div>' +
       '<svg></svg>' +
     '</div>',
+  data: function () {
+    return {
+      stats: {
+        mean: null
+      }
+    }
+  },
   mounted: function () {
     console.log('filter(' + this.id + '):mounted');
     var vm = this;
+
+    this.meanValue = null;
 
     var margin = {
           top: 10,
@@ -69,6 +81,8 @@ module.exports = {
       .attr("transform", "translate(0," + this.height + ")")
       .call(this.axes.x)
 
+    g.append("g").attr("class", "vertical-lines");
+
     var gBrush = g.append("g").attr("class", "brush").call(this.brush);
     gBrush.selectAll("rect").attr("height", this.height);
     gBrush.selectAll(".resize").append("path").attr("d", resizePath);
@@ -101,9 +115,11 @@ module.exports = {
     }, {deep: true});
   },
   computed: {
+    valueFormat: function () {
+      return d3.format(this.variable.format.value);
+    },
     rangeLabel: function () {
-      var formatter = d3.format(this.variable.format.value);
-
+      var formatter = this.valueFormat;
       return this.range && this.range.length == 2 ?
         formatter(this.range[0]) + ' - ' + formatter(this.range[1]) :
         formatter(this.variable.min) + ' - ' + formatter(this.variable.max);
@@ -131,13 +147,18 @@ module.exports = {
       // console.log('filter(' + this.id + '):render()');
       var vm = this;
 
-      var groups = this.getDim().group.all();
+      var dim = this.getDim(),
+          groups = dim.group.all();
       if (groups[0].key < 0) {
         groups = groups.slice(1, groups.length);
       }
 
       this.scales.y.domain([0, d3.max(groups, function(d) { return d.value; })]);
       this.svg.selectAll(".all.bar").datum(groups).attr("d", barPath);
+
+      var stats = dim.stats.group.value();
+      this.stats.mean = stats.count > 0 ? stats.sum / stats.count : null;
+
       var selectedDim = this.getSelectedDim();
       if (selectedDim) {
         var selectedGroups = selectedDim.group.all();
@@ -150,6 +171,24 @@ module.exports = {
       } else {
         this.svg.selectAll(".selected.bar").datum([]).attr("d", barPath);
       }
+
+      // vertical bars
+      var meanLine = this.svg.select('g.vertical-lines').selectAll('.mean-line')
+        .data(this.stats.mean === null ? [] : [this.stats.mean]);
+
+      meanLine.enter()
+        .append('line')
+        .attr('class', 'mean-line')
+        .style('stroke', 'rgb(76, 174, 255)')
+        .style('stroke-width', '2px')
+        .attr('y1', this.scales.y.range()[0])
+        .attr('y2', this.scales.y.range()[1]);
+
+      meanLine
+        .attr('x1', function(d) { return vm.scales.x(d); })
+        .attr('x2', function(d) { return vm.scales.x(d); });
+
+      meanLine.exit().remove();
 
       this.drawBrush();
 
