@@ -2,7 +2,8 @@ var L = require('leaflet');
 
 L.Control.Transparency = L.Control.extend({
   onAdd: function (map) {
-    var container = L.DomUtil.create('div', 'ice-map-control-transparency');
+    var container = L.DomUtil.create('div', 'ice-map-control-transparency leaflet-bar');
+
 
     var slider = L.DomUtil.create('div', 'ice-map-control-transparency-slider', container);
     slider.style.height = '100px';

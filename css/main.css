@@ -52,6 +52,11 @@
   margin-top: 58px;
 }
 
+.leaflet-touch .leaflet-control-layers-toggle {
+  width: 30px;
+  height: 30px;
+}
+
 .ice-map {
   width: 100%;
   height: 100%;
@@ -130,7 +135,7 @@
 
 /* Transparency Slider */
 .ice-map-control-transparency {
-  width: 36px;
+  width: 34px;
   text-align: center;
   padding-top: 10px;
   padding-bottom: 5px;
