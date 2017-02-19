@@ -99,18 +99,23 @@ var app = window.app = new Vue({
     },
     config: {
       layer: {
-        config: {},
+        config: {
+          dropupAuto: false
+        },
         options: []
       },
       variable: {
-        config: {},
+        config: {
+          dropupAuto: false
+        },
         options: []
       },
       filters: {
         charts: {
           config: {
             selectedTextFormat: 'count',
-            countSelectedText: '{0} variables selected'
+            countSelectedText: '{0} variables selected',
+            dropupAuto: false
           },
           options: []
         },
@@ -118,7 +123,8 @@ var app = window.app = new Vue({
           config: {
             actionsBox: true,
             selectedTextFormat: 'count',
-            countSelectedText: '{0} states selected'
+            countSelectedText: '{0} states selected',
+            dropupAuto: false
           },
           options: []
         }
