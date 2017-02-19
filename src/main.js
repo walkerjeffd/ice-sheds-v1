@@ -209,6 +209,9 @@ var app = window.app = new Vue({
     // initialize share copy-to-clipboard button
     new Clipboard('.btn-copy');
 
+    // initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
     // initialize crossfilter
     this.xf = IceCrossfilter();
 
