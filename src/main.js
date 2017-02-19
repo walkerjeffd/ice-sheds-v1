@@ -3,7 +3,8 @@ var Vue = require('vue'),
     Promise = require('bluebird'),
     topojson = require('topojson-client'),
     queryString = require('query-string'),
-    Clipboard = require('clipboard');
+    Clipboard = require('clipboard'),
+    Joi = require('joi');
 
 var config = require('./config');
 
@@ -11,7 +12,7 @@ var evt = new Vue();
 
 Vue.use(VueResource);
 Vue.component('select-picker', require('./components/selectPicker'));
-Vue.component('ice-filter', require('./components/iceFilter'));
+Vue.component('ice-filter', require('./components/iceFilter')(evt));
 Vue.component('ice-map', require('./components/iceMap')(evt));
 Vue.component('ice-status', require('./components/iceStatus'));
 Vue.component('ice-select-aggregation', require('./components/iceSelectAggregation'));
@@ -33,7 +34,7 @@ var downloadJsonFile = function (data, filename) {
   window.URL.revokeObjectURL(url);
 }
 
-var serialize = function (state) {
+var serialize_old = function (state) {
   var obj = {
     configUrl: state.configUrl,
     variable: state.variable,
@@ -71,7 +72,7 @@ var serialize = function (state) {
   return queryString.stringify(obj);
 };
 
-var deserialize = function (query) {
+var deserialize_old = function (query) {
   if (!query) return;
 
   var parsed = queryString.parse(query);
@@ -213,11 +214,11 @@ var app = window.app = new Vue({
     this.xf = IceCrossfilter();
 
     // parse search query string
-    var query = deserialize(location.search);
+    var query = vm.dataset.query = this.deserializeUrl(location.search);
 
     // load dataset
     var configUrl = query && query.configUrl || this.state.configUrl;
-    this.loadDataset(configUrl, query);
+    this.loadDataset(configUrl);
   },
   computed: {
     variable: function () {
@@ -266,10 +267,11 @@ var app = window.app = new Vue({
     }
   },
   methods: {
-    loadDataset: function (url, query) {
+    loadDataset: function (url) {
       console.log('app:loadDataset()', url);
 
-      var vm = this;
+      var vm = this,
+          query = vm.dataset.query;
 
       vm.setStatus('Loading dataset...');
       vm.show.loading = true;
@@ -277,12 +279,18 @@ var app = window.app = new Vue({
       return vm.fetchConfig(url)
         .then(function (config) {
           vm.$set(vm.dataset, 'config', config);
+          return config;
+        })
+        .then(vm.validateUrl)
+        .then(function (query) {
+          vm.$set(vm.dataset, 'query', query);
           return vm.dataset.config;
         })
         .then(vm.loadConfig)
         .then(vm.fetchDataset)
         .then(function (data) {
-          var config = vm.dataset.config;
+          var config = vm.dataset.config,
+              query = vm.dataset.query;
 
           vm.dataset.loaded = true;
 
@@ -309,33 +317,51 @@ var app = window.app = new Vue({
             }
           };
 
-          vm.updateState(config.state);
-          vm.updateState(query);
+          vm.updateState(config.state); // default state
+          vm.updateState(query);        // update with query string
 
           vm.selectVariable(vm.state.variable);
           vm.selectFiltersRegion(vm.state.filters.region);
           vm.selectFiltersCharts(vm.state.filters.charts);
 
-          // update filter ranges from query
-          // b/c state.filters.charts does not include filter ranges
-          // so ranges are not set in selectFiltersCharts()
-          if (query && query.filters && query.filters.charts) {
-            query.filters.charts.forEach(function (filter) {
-              filter.range && vm.setFilter(filter.id, filter.range);
-            });
-          }
-
           return vm.selectLayer(vm.state.layer)
             .then(function () {
               // select feature from query
-              if (query && query.selectedId) {
+              if (query && query.selected && query.selected.aggregation) {
                 var features = vm.state.map.aggregationLayer.features.filter(function (d) {
-                  return d.id === query.selectedId;
+                  return d.id === query.selected.aggregation;
                 });
 
-                if (features.length > 0) {
-                  vm.selectAggregation(features[0]);
+                var feature = features[0];
+
+                if (feature) {
+                  vm.selectAggregation(feature);
+
+                  if (query.catchments) {
+                    vm.zoomToCatchments(feature)
+                      .then(function () {
+                        if (!query.selected.catchment) return;
+                        var features = vm.state.map.catchmentLayer.features.filter(function (d) {
+                          return d.id === query.selected.catchment;
+                        });
+
+                        var feature = features[0];
+
+                        if (feature) {
+                          vm.selectCatchment(feature);
+                        }
+                      });
+                  }
                 }
+              }
+
+              // update filter ranges from query
+              // b/c state.filters.charts does not include filter ranges (only ids)
+              // so ranges are not set in selectFiltersCharts()
+              if (query && query.filters && query.filters.charts) {
+                query.filters.charts.forEach(function (filter) {
+                  filter.range && vm.setFilter(filter.id, filter.range);
+                });
               }
             });
         })
@@ -345,7 +371,7 @@ var app = window.app = new Vue({
         .catch(function (err) {
           console.error(err);
           vm.setStatus('Error');
-          alert('Failed to load dataset');
+          alert('Error: ' + err.message);
         })
         .finally(function () {
           vm.show.loading = false;
@@ -358,17 +384,17 @@ var app = window.app = new Vue({
 
       return vm.$http.get(url)
         .then(function (response) {
-          if (!response.body) throw new Error('Failed to fetch dataset configuration file (empty response)');
+          if (!response.body) throw new Error('Failed to fetch configuration file (empty response)');
 
           vm.$set(vm.state, 'configUrl', url);
 
-          var datasetConfig = response.body;
+          var config = response.body;
 
-          return datasetConfig;
+          return config;
         })
         .catch(function (response) {
           console.error(response);
-          throw new Error('Failed to fetch dataset configuration file (server error)')
+          throw new Error('Failed to fetch configuration file');
         });
     },
     loadConfig: function (config) {
@@ -573,14 +599,17 @@ var app = window.app = new Vue({
         this.state.selected.xf.setFilterDimRange(id, range);
       }
 
-      this.$set(this.state.xf.filters[idx], 'range', range);
+      this.state.xf.filters[idx].range = range;
       this.state.xf.count.filtered = this.xf.getFilteredCount();
 
       if (this.state.selected.xf) {
         vm.state.selected.count.filtered = this.state.selected.xf.getFilteredCount();
       }
 
-      evt.$emit('refresh-map');
+      Vue.nextTick(function () {
+        evt.$emit('refresh-map');
+        evt.$emit('refresh-filters')
+      });
     },
     getVariableById: function (id) {
       var variable;
@@ -679,6 +708,7 @@ var app = window.app = new Vue({
 
         this.state.filters.region = values;
         this.$set(this.state.xf, this.dataset.config.region.id, values);
+        evt.$emit('refresh-map');
 
         this.setStatus();
       }.bind(this), 0);
@@ -838,7 +868,7 @@ var app = window.app = new Vue({
       params[this.state.layer] = feature.id;
 
       // fetch catchments from api
-      this.$http.get(config.api.url + '/catchments', {
+      return this.$http.get(config.api.url + '/catchments', {
           params: params
         })
         .then(function (response) {
@@ -854,7 +884,7 @@ var app = window.app = new Vue({
         });
     },
     share: function () {
-      var query = serialize(this.state),
+      var query = this.serializeUrl(this.state),
           url = location.origin + location.pathname + '?' + query;
 
       this.shareUrl = url;
@@ -953,6 +983,120 @@ var app = window.app = new Vue({
     resizeWindow: function () {
       console.log('app:resizeWindow()');
       $('.ice-filter-container').css('max-height', ($(window).height() - 185) + "px");
+    },
+    serializeUrl: function () {
+      var query = {};
+
+      query.configUrl = this.state.configUrl;
+
+      query.variable = this.state.variable;
+      query.layer = this.state.layer;
+
+      query.filters = {};
+      query.filters.region = this.state.filters.region;
+      query.filters.charts = this.state.xf.filters.map(function (filter) {
+        return {
+          id: filter.id,
+          range: filter.range
+        };
+      });
+
+      query.selected = {};
+      if (this.state.selected.aggregation) {
+        query.selected.aggregation = this.state.selected.aggregation.id;
+
+        if (this.state.map.catchmentLayer) {
+          query.catchments = true;
+
+          if (this.state.selected.catchment) {
+            query.selected.catchment = this.state.selected.catchment.id;
+          }
+        }
+      }
+
+      query.map = {
+        view: {
+          center: this.state.map.view.center,
+          zoom: this.state.map.view.zoom
+        }
+      };
+
+      // stringify nested objects
+      ['filters', 'map', 'selected'].forEach(function (key) {
+        query[key] = JSON.stringify(query[key]);
+      })
+
+      return queryString.stringify(query);
+    },
+    validateUrl: function (config) {
+      console.log('app: validateUrl()', config);
+
+      var vm = this,
+          query = this.dataset.query;
+
+      var schema = Joi.object().keys({
+        configUrl: Joi.string().uri({allowRelative: true}),
+        variable: Joi.string().valid(
+          config.variables
+            .filter(function (d) { return d.aggregation; })
+            .map(function (d) { return d.id; })
+            .concat(['*area'])
+        ),
+        layer: Joi.string().valid(
+          config.layers.map(function (d) { return d.id; })
+        ),
+        filters: Joi.object().keys({
+          region: Joi.array().items(
+            Joi.string().valid(
+              config.region.options.map(function (d) { return d.id; })
+            )
+          ),
+          charts: Joi.array().items(
+            Joi.object().keys({
+              id: Joi.string().valid(
+                config.variables
+                  .filter(function (d) { return d.filter; })
+                  .map(function (d) { return d.id; })
+              ).required(),
+              range: Joi.array().length(2).items(
+                Joi.number()
+              ).optional()
+            })
+          )
+        }),
+        map: Joi.object().keys({
+          view: Joi.object().keys({
+            center: Joi.array().length(2).items(
+              Joi.number().min(-180).max(180)
+            ),
+            zoom: Joi.number().integer().min(5).max(18)
+          })
+        }),
+        selected: Joi.object().keys({
+          aggregation: Joi.string(),
+          catchment: Joi.string()
+        }),
+        catchments: Joi.boolean()
+      });
+
+      return new Promise(function (resolve, reject) {
+        if (!query) return resolve(config);
+
+        var result = Joi.validate(query, schema);
+
+        if (result.error) {
+          return reject(new Error('Invalid URL\n\n' + result.error.message));
+        }
+
+        return resolve(result.value);
+      })
+    },
+    deserializeUrl: function (query) {
+      if (!query) return;
+
+      var parsed = queryString.parse(query);
+
+      return parsed;
     }
   }
 })

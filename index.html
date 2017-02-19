@@ -72,13 +72,13 @@
         </select-picker>
         <ice-legend :variable="variable" :color-scale="colorScale"></ice-legend>
       </div>
-      <!-- <div class="ice-box">
+      <div class="ice-box">
         <div class="ice-box-title">Debug</div>
 <pre>
-
+{{state.map.view}}
 </pre>
 
-      </div> -->
+      </div>
     </div>
     <div class="ice-right-sidebar">
       <div class="ice-box">
@@ -103,7 +103,6 @@
             :id="filter.id"
             :range="filter.range"
             :variable="filter.variable"
-            :filters="state.xf"
             :selected="state.selected"
             :get-dim="filter.getDim"
             :get-selected-dim="filter.getSelectedDim"

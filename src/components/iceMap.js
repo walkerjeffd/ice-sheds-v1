@@ -42,7 +42,9 @@ module.exports = function (evt) {
       leafletMap = L.map(this.$el, {
         center: this.center,
         zoom: +this.zoom,
-        layers: []
+        layers: [],
+        maxZoom: 18,
+        minZoom: 5
       });
 
       var basemapLayers = {};
