@@ -206,11 +206,8 @@ var app = window.app = new Vue({
   mounted: function () {
     var vm = this;
 
-    // initialize share copy-to-clipboard button
-    new Clipboard('.btn-copy');
-
-    // initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
+    // initialize interface
+    this.initializeUi();
 
     // initialize crossfilter
     this.xf = IceCrossfilter();
@@ -934,6 +931,28 @@ var app = window.app = new Vue({
 
         this.setStatus();
       }.bind(this), 0)
+    },
+    initializeUi: function () {
+      // initialize share copy-to-clipboard button
+      new Clipboard('.btn-copy');
+
+      // initialize tooltips
+      $('[data-toggle="tooltip"]').tooltip();
+
+      // initialize resize
+      $(window).resize(this.resizeWindow);
+      this.resizeWindow();
+
+      // sortable filters
+      $('.ice-filter-container').sortable({
+        items: '.ice-filter',
+        axis: 'y',
+        handle: '.title'
+      });
+    },
+    resizeWindow: function () {
+      console.log('app:resizeWindow()');
+      $('.ice-filter-container').css('max-height', ($(window).height() - 185) + "px");
     }
   }
 })

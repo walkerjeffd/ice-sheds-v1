@@ -95,20 +95,21 @@
         </select-picker>
         <div class="text-right" class="margin-top:5px">{{state.xf.count.filtered | number}} of {{state.xf.count.total | number}} catchments filtered</div>
         <div class="text-right" v-show="state.selected.aggregation">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} within selected HUC</div>
-        <hr>
-        <div
-          is="ice-filter"
-          v-for="filter in state.xf.filters"
-          :key="filter.id"
-          :id="filter.id"
-          :range="filter.range"
-          :variable="filter.variable"
-          :filters="state.xf"
-          :selected="state.selected"
-          :get-dim="filter.getDim"
-          :get-selected-dim="filter.getSelectedDim"
-          v-on:brush="setFilter"
-          v-on:destroy="removeFilter">
+        <div class="ice-filter-container">
+          <div
+            is="ice-filter"
+            v-for="filter in state.xf.filters"
+            :key="filter.id"
+            :id="filter.id"
+            :range="filter.range"
+            :variable="filter.variable"
+            :filters="state.xf"
+            :selected="state.selected"
+            :get-dim="filter.getDim"
+            :get-selected-dim="filter.getSelectedDim"
+            v-on:brush="setFilter"
+            v-on:destroy="removeFilter">
+          </div>
         </div>
       </div>
     </div>

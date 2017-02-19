@@ -227,7 +227,6 @@ path.ice-map-path-catchment-mouse:hover {
   margin-bottom: 5px;
 }
 
-
 body {
   padding:0px;
   margin:0px;
@@ -245,6 +244,13 @@ a {
 
 
 /* ICE FILTER -------------------------------------------------------------- */
+.ice-filter-container {
+  max-height: 460px;
+  margin-top: 5px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .ice-filter {
   width: 380px;
   margin-bottom: 5px;
