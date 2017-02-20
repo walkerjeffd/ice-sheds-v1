@@ -34,57 +34,6 @@ var downloadJsonFile = function (data, filename) {
   window.URL.revokeObjectURL(url);
 }
 
-var serialize_old = function (state) {
-  var obj = {
-    configUrl: state.configUrl,
-    variable: state.variable,
-    layer: state.layer,
-    filters: {
-      charts: [],
-      region: state.filters.region
-    },
-    selected: {
-    },
-    map: {
-      view: {
-        center: state.map.view.center,
-        zoom: state.map.view.zoom
-      }
-    }
-  };
-
-  if (state.selected.aggregation) {
-    obj.selected.aggregationId = state.selected.aggregation.id;
-  }
-
-  state.xf.filters.forEach(function (filter) {
-    obj.filters.charts.push({
-      id: filter.id,
-      range: filter.range
-    });
-  });
-
-  // stringify nested objects
-  ['selected', 'filters', 'map'].forEach(function (key) {
-    obj[key] = JSON.stringify(obj[key]);
-  })
-
-  return queryString.stringify(obj);
-};
-
-var deserialize_old = function (query) {
-  if (!query) return;
-
-  var parsed = queryString.parse(query);
-
-  // parse stringified nested objects
-  ['selected', 'filters', 'map'].forEach(function (key) {
-    if (parsed[key]) parsed[key] = JSON.parse(parsed[key]);
-  })
-
-  return parsed;
-};
-
 var numberFormat = d3.format(',.0f');
 
 var app = window.app = new Vue({
@@ -289,6 +238,7 @@ var app = window.app = new Vue({
         .then(vm.loadConfig)
         .then(vm.fetchDataset)
         .then(function (data) {
+          // set up crossfilter
           var config = vm.dataset.config,
               query = vm.dataset.query;
 
@@ -303,9 +253,11 @@ var app = window.app = new Vue({
             vm.xf.addCategoricalDim(config.region.id);
           }
 
+          // counts
           vm.state.xf.count.total = data.length;
           vm.state.xf.count.filtered = vm.xf.getFilteredCount();
 
+          // map getters
           vm.state.map.getAggregationValue = function (id) {
             return vm.xf.getAggregationValue(id);
           };
@@ -317,53 +269,93 @@ var app = window.app = new Vue({
             }
           };
 
-          vm.updateState(config.state); // default state
-          vm.updateState(query);        // update with query string
+          // set default state and update with query
+          vm.updateState(config.state);
+          vm.updateState(query);
 
+          return Promise.resolve();
+        })
+        .then(function () {
+          console.log('init:select variable and filters');
           vm.selectVariable(vm.state.variable);
           vm.selectFiltersRegion(vm.state.filters.region);
           vm.selectFiltersCharts(vm.state.filters.charts);
 
-          return vm.selectLayer(vm.state.layer)
-            .then(function () {
-              // select feature from query
-              if (query && query.selected && query.selected.aggregation) {
-                var features = vm.state.map.aggregationLayer.features.filter(function (d) {
-                  return d.id === query.selected.aggregation;
-                });
+          return vm.selectLayer(vm.state.layer);
+        })
+        .then(function () {
+          // select feature from query
+          console.log('init:query.selected.aggregation');
+          var query = vm.dataset.query;
 
-                var feature = features[0];
-
-                if (feature) {
-                  vm.selectAggregation(feature);
-
-                  if (query.catchments) {
-                    vm.zoomToCatchments(feature)
-                      .then(function () {
-                        if (!query.selected.catchment) return;
-                        var features = vm.state.map.catchmentLayer.features.filter(function (d) {
-                          return d.id === query.selected.catchment;
-                        });
-
-                        var feature = features[0];
-
-                        if (feature) {
-                          vm.selectCatchment(feature);
-                        }
-                      });
-                  }
-                }
-              }
-
-              // update filter ranges from query
-              // b/c state.filters.charts does not include filter ranges (only ids)
-              // so ranges are not set in selectFiltersCharts()
-              if (query && query.filters && query.filters.charts) {
-                query.filters.charts.forEach(function (filter) {
-                  filter.range && vm.setFilter(filter.id, filter.range);
-                });
-              }
+          if (query && query.selected && query.selected.aggregation) {
+            var features = vm.state.map.aggregationLayer.features.filter(function (d) {
+              return d.id === query.selected.aggregation;
             });
+
+            var feature = features[0];
+
+            if (feature) {
+              vm.selectAggregation(feature);
+              return Promise.resolve(feature);
+            } else {
+              return Promise.reject(new Error('Failed to select feature "' + query.selected.aggregation + '"'));
+            }
+          } else {
+            return Promise.resolve();
+          }
+        })
+        .then(function (feature) {
+          // show catchments
+          console.log('init:query.selected.aggregation');
+          var query = vm.dataset.query;
+
+          if (query && query.catchments && feature) {
+            return vm.fetchCatchments(feature)
+              .catch(function (response) {
+                console.error('Error fetching catchments', response);
+                throw new Error('Failed to get catchments from server');
+              });
+          } else {
+            return Promise.resolve();
+          }
+        })
+        .then(function () {
+          // select catchment
+          console.log('init:query.selected.catchment');
+          var query = vm.dataset.query;
+
+          if (query && query.selected && query.selected.catchment) {
+            var features = vm.state.map.catchmentLayer.features.filter(function (d) {
+              return d.id === query.selected.catchment;
+            });
+
+            var feature = features[0];
+
+            if (feature) {
+              vm.selectCatchment(feature);
+              return Promise.resolve();
+            } else {
+              return Promise.reject(new Error('Failed to select catchment "' + query.selected.catchment + '"'));
+            }
+          } else {
+            return Promise.resolve();
+          }
+        })
+        .then(function () {
+          // update filter ranges from query
+          // b/c state.filters.charts does not include filter ranges (only ids)
+          // so ranges are not set in selectFiltersCharts()
+          console.log('init:query.filters.charts range');
+          var query = vm.dataset.query;
+
+          if (query && query.filters && query.filters.charts) {
+            query.filters.charts.forEach(function (filter) {
+              filter.range && vm.setFilter(filter.id, filter.range);
+            });
+          }
+
+          return Promise.resolve();
         })
         .then(function () {
           vm.setStatus();
@@ -864,23 +856,31 @@ var app = window.app = new Vue({
 
       this.setStatus('Zooming to catchments...');
 
-      var params = {};
+      return this.fetchCatchments(feature)
+        .then(function () {
+          vm.setStatus();
+        })
+        .catch(function (error) {
+          console.error('Failed to fetch catchments', error);
+          alert('Failed to get catchments from server');
+          vm.setStatus('Server Error');
+        })
+        .finally(function () {
+          vm.show.loading = false;
+        });
+    },
+    fetchCatchments: function (feature) {
+      console.log('app:fetchCatchments(%s)', feature && feature.id);
+
+      var vm = this,
+          params = {};
       params[this.state.layer] = feature.id;
 
-      // fetch catchments from api
       return this.$http.get(config.api.url + '/catchments', {
           params: params
         })
         .then(function (response) {
           vm.$set(vm.state.map, 'catchmentLayer', response.data.data);
-        })
-        .catch(function (response) {
-          console.log('error', response);
-          alert('Error occurred fetching catchments');
-        })
-        .finally(function () {
-          vm.show.loading = false;
-          this.setStatus();
         });
     },
     share: function () {
@@ -1029,7 +1029,7 @@ var app = window.app = new Vue({
       return queryString.stringify(query);
     },
     validateUrl: function (config) {
-      console.log('app: validateUrl()', config);
+      console.log('app:validateUrl()', config);
 
       var vm = this,
           query = this.dataset.query;
