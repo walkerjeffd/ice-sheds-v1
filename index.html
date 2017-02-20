@@ -28,8 +28,9 @@
     <div class="ice-left-sidebar">
       <div class="ice-box">
         <div class="ice-box-title">Controls</div>
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-default disabled" data-toggle="modal" data-target="#data-modal"><i class="fa fa-info"></i> Dataset</button>
+        <div class="btn-group btn-group-xs">
+          <button class="btn btn-default disabled"><i class="fa fa-question-circle"></i> About</button>
+          <button class="btn btn-default disabled" data-toggle="modal" data-target="#data-modal"><i class="fa fa-table"></i> Dataset</button>
           <button class="btn btn-default" @click="share"><i class="fa fa-share"></i> Share</button>
           <button class="btn btn-default" data-toggle="modal" data-target="#modal-download"><i class="fa fa-download"></i> Download</button>
         </div>
@@ -93,8 +94,10 @@
           title="Select filter variables..."
           multiple="true">
         </select-picker>
-        <div class="text-right" class="margin-top:5px">{{state.xf.count.filtered | number}} of {{state.xf.count.total | number}} catchments filtered</div>
-        <div class="text-right" v-show="state.selected.aggregation">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} within selected HUC</div>
+        <div class="ice-filter-legend">
+          <div><i class="fa fa-square" style="color:steelblue"></i> All Catchments <span class="pull-right">{{state.xf.count.filtered | number}} of {{state.xf.count.total | number}} filtered</span></div>
+          <div v-show="state.selected.aggregation"><i class="fa fa-square" style="color:orangered"></i> Within Selected HUC <span class="pull-right">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} filtered</span></div>
+        </div>
         <div class="ice-filter-container">
           <div
             is="ice-filter"
