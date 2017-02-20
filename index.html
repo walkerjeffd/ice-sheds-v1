@@ -95,8 +95,8 @@
           multiple="true">
         </select-picker>
         <div class="ice-filter-legend">
-          <div><i class="fa fa-square" style="color:steelblue"></i> All Catchments <span class="pull-right">{{state.xf.count.filtered | number}} of {{state.xf.count.total | number}} filtered</span></div>
-          <div v-show="state.selected.aggregation"><i class="fa fa-square" style="color:orangered"></i> Within Selected HUC <span class="pull-right">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} filtered</span></div>
+          <div><i class="fa fa-square" style="color:steelblue"></i> All Catchments <span class="pull-right" v-show="dataset.loaded" style="display:none">{{state.xf.count.filtered | number}} of {{state.xf.count.total | number}} filtered</span></div>
+          <div v-show="state.selected.aggregation" style="display:none"><i class="fa fa-square" style="color:orangered"></i> Within Selected HUC <span class="pull-right">{{state.selected.count.filtered | number}} of {{state.selected.count.total | number}} filtered</span></div>
         </div>
         <div class="ice-filter-container">
           <div
@@ -119,16 +119,20 @@
     <ice-select-aggregation
       :feature-type="featureType"
       :feature="state.selected.aggregation"
+      :show="show.unselectedAggregation"
       v-if="state.selected.aggregation"
       v-on:unselect="selectAggregation"
-      v-on:catchments="zoomToCatchments"
-      v-on:info="showInfoAggregation">
+      v-on:zoom="zoomToFeature"
+      v-on:catchments="showCatchments"
+      v-on:data="showDataAggregation"
+      v-on:show="showUnselectedAggregation">
     </ice-select-aggregation>
     <ice-select-catchment
       :feature="state.selected.catchment"
       v-if="state.selected.catchment"
       v-on:unselect="selectCatchment"
-      v-on:info="showInfoCatchment">
+      v-on:zoom="zoomToFeature"
+      v-on:data="showDataCatchment">
     </ice-select-catchment>
     <ice-map
       :center="state.map.view.center"
@@ -146,6 +150,7 @@
       :get-catchment-value="state.map.getCatchmentValue"
       :aggregation-tooltip="aggregationTooltip"
       :catchment-tooltip="catchmentTooltip"
+      :show-unselected-aggregation="show.unselectedAggregation"
       v-on:select-aggregation="selectAggregation"
       v-on:select-catchment="selectCatchment">
     </ice-map>
@@ -206,12 +211,12 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" tabindex="-1" role="dialog" id="modal-info-aggregation">
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal-data-aggregation">
     <div class="modal-dialog" role="document" style="overflow-y: initial">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Selected HUC Info</h4>
+          <h4 class="modal-title">Selected HUC Data</h4>
         </div>
         <div class="modal-body" style="height: 430px;overflow-y: auto;">
           <div class="row">
@@ -245,12 +250,12 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" tabindex="-1" role="dialog" id="modal-info-catchment">
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal-data-catchment">
     <div class="modal-dialog" role="document" style="overflow-y: initial">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Selected Catchment Info</h4>
+          <h4 class="modal-title">Selected Catchment Data</h4>
         </div>
         <div class="modal-body" style="height: 430px;overflow-y: auto;">
           <div class="row">

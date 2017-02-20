@@ -41,7 +41,8 @@ var app = window.app = new Vue({
   data: {
     shareUrl: '',
     show: {
-      loading: true
+      loading: true,
+      unselectedAggregation: true
     },
     dataset: {
       count: 0,
@@ -568,7 +569,7 @@ var app = window.app = new Vue({
           vm.state.selected.count.filtered = vm.state.selected.xf.getFilteredCount();
         }
 
-        evt.$emit('refresh-map');
+        evt.$emit('map:refresh');
 
         this.setStatus();
       }.bind(this), 0);
@@ -599,8 +600,8 @@ var app = window.app = new Vue({
       }
 
       Vue.nextTick(function () {
-        evt.$emit('refresh-map');
-        evt.$emit('refresh-filters')
+        evt.$emit('map:refresh');
+        evt.$emit('filter:refresh')
       });
     },
     getVariableById: function (id) {
@@ -700,7 +701,7 @@ var app = window.app = new Vue({
 
         this.state.filters.region = values;
         this.$set(this.state.xf, this.dataset.config.region.id, values);
-        evt.$emit('refresh-map');
+        evt.$emit('map:refresh');
 
         this.setStatus();
       }.bind(this), 0);
@@ -791,7 +792,7 @@ var app = window.app = new Vue({
               vm.$delete(vm.state.map, 'catchmentLayer');
 
               // // Automatically switch to catchment view on new selection??
-              // vm.zoomToCatchments(feature);
+              // vm.showCatchments(feature);
             }
 
             vm.setStatus();
@@ -825,6 +826,9 @@ var app = window.app = new Vue({
         } else {
           // no current selection, do nothing
         }
+
+        // reset show unselected aggregation
+        vm.show.unselectedAggregation = true;
       }
     },
     selectCatchment: function (feature) {
@@ -847,14 +851,14 @@ var app = window.app = new Vue({
       this.state.variable = variable;
       this.xf.setAggregation(this.state.layer, this.state.variable);
     },
-    zoomToCatchments: function (feature) {
-      console.log('app:zoomToCatchments(%s)', feature && feature.id);
+    showCatchments: function (feature) {
+      console.log('app:showCatchments(%s)', feature && feature.id);
 
       var vm = this;
 
       vm.show.loading = true;
 
-      this.setStatus('Zooming to catchments...');
+      this.setStatus('Fetching catchments...');
 
       return this.fetchCatchments(feature)
         .then(function () {
@@ -862,12 +866,15 @@ var app = window.app = new Vue({
         })
         .catch(function (error) {
           console.error('Failed to fetch catchments', error);
-          alert('Failed to get catchments from server');
+          alert('Failed to get catchments from server\n\n', error.message);
           vm.setStatus('Server Error');
         })
         .finally(function () {
           vm.show.loading = false;
         });
+    },
+    zoomToFeature: function (feature) {
+      evt.$emit('map:zoomToFeature', feature);
     },
     fetchCatchments: function (feature) {
       console.log('app:fetchCatchments(%s)', feature && feature.id);
@@ -891,11 +898,11 @@ var app = window.app = new Vue({
 
       $('#modal-share').modal('show');
     },
-    showInfoAggregation: function (feature) {
+    showDataAggregation: function (feature) {
       var vm = this,
           variables = vm.dataset.config.variables;
 
-      this.setStatus('Opening info...');
+      this.setStatus('Opening data table...');
 
       setTimeout(function () {
         var values = vm.xf.computeStats(feature.id, variables);
@@ -906,16 +913,16 @@ var app = window.app = new Vue({
                 value = values[variable.id];
             vm.state.selected.variableStats[variable.id] = value === null ? 'N/A' : formatter(values[variable.id]);
           });
-        $('#modal-info-aggregation').modal('show');
+        $('#modal-data-aggregation').modal('show');
 
         this.setStatus();
       }.bind(this), 0);
     },
-    showInfoCatchment: function (feature) {
+    showDataCatchment: function (feature) {
       var vm = this,
           variables = vm.dataset.config.variables;
 
-      this.setStatus('Opening info...');
+      this.setStatus('Opening data table...');
 
       setTimeout(function () {
         var values = vm.xf.getCatchmentValue(feature.id);
@@ -927,7 +934,7 @@ var app = window.app = new Vue({
                 value = values[variable.id];
             vm.state.selected.catchmentStats[variable.id] = value === null ? 'N/A' : formatter(values[variable.id]);
           });
-        $('#modal-info-catchment').modal('show');
+        $('#modal-data-catchment').modal('show');
 
         this.setStatus();
       }.bind(this), 0);
@@ -1097,6 +1104,10 @@ var app = window.app = new Vue({
       var parsed = queryString.parse(query);
 
       return parsed;
+    },
+    showUnselectedAggregation: function (show) {
+      // console.log('app:showUnselectedAggregation(%s)', show);
+      this.show.unselectedAggregation = show;
     }
   }
 })

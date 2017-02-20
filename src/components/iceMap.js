@@ -24,7 +24,7 @@ var basemapGenerators = {
 
 module.exports = function (evt) {
   return {
-    props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'catchmentLayer', 'getFeatureValue', 'getCatchmentValue', 'colorScale', 'aggregationTooltip', 'catchmentTooltip', 'setView', 'variable', 'selectedAggregation', 'selectedCatchment'],
+    props: ['center', 'zoom', 'basemaps', 'overlays', 'layer', 'catchmentLayer', 'getFeatureValue', 'getCatchmentValue', 'colorScale', 'aggregationTooltip', 'catchmentTooltip', 'setView', 'variable', 'selectedAggregation', 'selectedCatchment', 'showUnselectedAggregation'],
     template: '<div class="ice-map"></div>',
     data: function () {
       return {
@@ -124,7 +124,8 @@ module.exports = function (evt) {
       this.leafletMap = leafletMap;
 
       // events
-      evt.$on('refresh-map', this.renderFill);
+      evt.$on('map:refresh', this.renderFill);
+      evt.$on('map:zoomToFeature', this.zoomToFeature);
     },
     watch: {
       layer: function (n, o) {
@@ -135,7 +136,6 @@ module.exports = function (evt) {
       catchmentLayer: function (n, o) {
         console.log('map:watch catchmentLayer', n);
         this.renderAll();
-        this.fitToCatchments(n);
       },
       variable: function (n, o) {
         console.log('map:watch variable', n);
@@ -156,21 +156,26 @@ module.exports = function (evt) {
       zoom: function (n, o) {
         console.log('map:watch zoom', n);
         this.updateView(this.center, this.zoom);
+      },
+      showUnselectedAggregation: function (n, o) {
+        console.log('map:watch showUnselectedAggregation', n);
+        this.renderAll();
       }
     },
     methods: {
+      zoomToFeature: function (feature) {
+        console.log('map:zoomToFeature()', feature);
+
+        if (!feature) return;
+
+        var geoJson = L.geoJson(feature);
+        this.leafletMap.fitBounds(geoJson.getBounds());
+      },
       updateView: function (center, zoom) {
         if (this.leafletMap.getCenter().lat !== center[0] || this.leafletMap.getCenter().lng !== center[1] || this.leafletMap.getZoom() !== zoom) {
           console.log('map:updateView()', center, zoom);
           this.leafletMap.setView(center, zoom);
         }
-      },
-      fitToCatchments: function (catchments) {
-        console.log('map:fitToCatchments()', catchments);
-        if (!catchments) return;
-
-        var geoJson = L.geoJson(catchments);
-        this.leafletMap.fitBounds(geoJson.getBounds());
       },
       resizeSvg: function () {
         if (this.data.layer) {
@@ -193,6 +198,15 @@ module.exports = function (evt) {
           .selectAll('path.ice-map-path-aggregation-mouse')
           .style('stroke', function (d) {
             return vm.selectedAggregation && vm.selectedAggregation.id == d.id ? 'red' : null;
+          })
+          .style('opacity', function (d) {
+            return vm.showUnselectedAggregation || (vm.selectedAggregation && vm.selectedAggregation.id == d.id) ? 1 : 0;
+          });
+
+        vm.svg.select('g.aggregation-fill')
+          .selectAll('path.ice-map-path-aggregation-fill')
+          .style('opacity', function (d) {
+            return vm.showUnselectedAggregation || (vm.selectedAggregation && vm.selectedAggregation.id == d.id) ? 1 : 0;
           });
 
         vm.svg.select('g.catchment-mouse')

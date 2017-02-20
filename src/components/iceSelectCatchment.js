@@ -3,7 +3,8 @@ module.exports = {
   template: '<div class="ice-select-box catchment text-right">' +
       '<div class="ice-select-box-title"><strong>Selected Catchment:</strong> <span>{{feature.id}}</span></div>' +
       '<div class="ice-select-box-body">' +
-        '<button class="btn btn-default btn-xs pull-left" @click="info"><i class="fa fa-info"></i> Info</button>' +
+        '<button class="btn btn-default btn-xs pull-left" @click="data"><i class="fa fa-table"></i> Data</button>' +
+        '<button class="btn btn-default btn-xs pull-left" @click="zoom"><i class="fa fa-search-plus"></i> Zoom To</button>' +
         '<button class="btn btn-default btn-xs pull-right" @click="unselect"><i class="fa fa-times-circle"></i> Unselect</button>' +
       '</div>' +
     '</div>',
@@ -11,8 +12,11 @@ module.exports = {
     unselect: function () {
       this.$emit('unselect');
     },
-    info: function () {
-      this.$emit('info', this.feature);
+    data: function () {
+      this.$emit('data', this.feature);
+    },
+    zoom: function () {
+      this.$emit('zoom', this.feature);
     }
   }
 };
