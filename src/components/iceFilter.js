@@ -161,8 +161,10 @@ module.exports = function (evt) {
         this.stats.mean = stats.count > 0 ? stats.sum / stats.count : null;
 
         var selectedDim = this.getSelectedDim();
+console.log('selectedDim', selectedDim);
         if (selectedDim) {
           var selectedGroups = selectedDim.group.all();
+console.log('selectedGroups', selectedGroups);
           if (selectedGroups[0].key < 0) {
             selectedGroups = selectedGroups.slice(1, selectedGroups.length);
           }

@@ -138,6 +138,7 @@ module.exports = function (data) {
   }
 
   xf.setCategoricalDimFilter = function (id, filter) {
+    console.log('xf:setCategoricalDimFilter()', id, filter);
     var dim = _dims[id];
 
     if (!dim) {
@@ -146,9 +147,14 @@ module.exports = function (data) {
     }
 
     dim.filter = filter;
-    dim.dimension.filter(function(d) {
-      return dim.filter.indexOf(d) > -1;
-    });
+
+    if (filter) {
+      dim.dimension.filter(function(d) {
+        return dim.filter.indexOf(d) > -1;
+      });
+    } else {
+      dim.dimension.filterAll();
+    }
     updateValues();
 
     return xf;
