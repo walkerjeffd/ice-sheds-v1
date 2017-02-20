@@ -188,20 +188,64 @@
   </div>
 
   <div class="modal fade" tabindex="-1" role="dialog" id="modal-download">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog" role="document" style="overflow-y: initial">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Download</h4>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="height: 430px;overflow-y: auto;">
           <div class="row">
             <div class="col-xs-12">
-              <button class="btn btn-primary" @click="downloadAggregationLayer">Download HUC Layer as GeoJSON</button>
-              <p>Click this button to download the current HUC layer in <a href="http://geojson.org/" target="_blank">GeoJSON</a> format.</p>
-              <hr>
-              <a class="btn btn-primary" :href="dataset.loaded ? dataset.config.data.url : '#'" download>Download Dataset as CSV</a>
-              <p>Click this button to download the dataset containing values of each variable for all catchments in CSV format. Shapefiles of the catchments can be downloaded here. Use the <code>featureid</code> columns to join the dataset to the shapefile attribute table.</p>
+              <h4>Current HUC Layer</h4>
+              <p>Download the current HUC layer in <a href="http://geojson.org/" target="_blank">GeoJSON</a> format. This file includes an attribute for the current Map Variable. The value of this attribute is the area-weighted mean value for each HUC feature based on the current filters (i.e. the same value currently shown on the map). GeoJSON files can be imported and converted to shapefiles using <a href="https://www.qgis.org/" target="_blank">QGIS</a> or <a href="https://www.arcgis.com" target="_blank">ArcGIS</a>.</p>
+              <button class="btn btn-default" @click="downloadAggregationLayer"><i class="fa fa-download"></i> HUC Layer (GeoJSON)</button>
+            </div>
+          </div>
+          <hr><div class="row">
+            <div class="col-xs-12">
+              <h4>Current Catchments Layer</h4>
+              <div v-if="state.map.catchmentLayer">
+                <p>Download the visible catchments for selected HUC in <a href="http://geojson.org/" target="_blank">GeoJSON</a> format. You may download either all catchments for this HUC, or only those that are currently filtered. Each file includes an attribute table containing the values of all the variables for each catchment (see Dataset and Variables below to download the Variables table). GeoJSON files can be imported and converted to shapefiles using <a href="https://www.qgis.org/" target="_blank">QGIS</a> or <a href="https://www.arcgis.com" target="_blank">ArcGIS</a>.</p>
+                <button class="btn btn-default" @click="downloadCatchmentLayer(false)"><i class="fa fa-download"></i> All Catchments (GeoJSON)</button>
+                <button class="btn btn-default" @click="downloadCatchmentLayer(true)"><i class="fa fa-download"></i> Filtered Catchments (GeoJSON)</button>
+              </div>
+              <div v-else>
+                <p><i class="fa fa-warning"></i> No catchments are currently available. Click on a HUC to select it, then click the Catchments button to load the catchments within it. Then return to this window to download those catchments in GeoJSON format.</p>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="row" v-if="dataset.loaded">
+            <div class="col-xs-12">
+              <h4>Source Dataset and Variables</h4>
+              <p>Download the entire dataset loaded in ICE in CSV format. This file contains the values of all variables (columns) for each catchment (rows). This file can be joined to the catchment shapefiles (see below) through the <code>{{dataset.config.columns.id}}</code> column, which contains the unique ID for each catchment. The variables are available as a CSV file and provide the column name and description of each variable. More information about the sources of each variable can be found at the following links.</p>
+              <ul>
+                <li><a href="http://conte-ecology.github.io/shedsGisData/" target="_blank">SHEDS GIS Data</a> (see Basin Characteristics section)</li>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/NHDHRDV2_Covariate_Documentation.xlsx" download>NHDHRDV2_Covariate_Documentation.xlsx</a></li>
+                <li><a href="http://conte-ecology.github.io/conteStreamTemperature_northeast/" target="_blank">Northeast Daily Stream Temperature Model</a></li>
+                <li><a href="http://conte-ecology.github.io/Northeast_Bkt_Occupancy/" target="_blank">Northeast Brook Trout Occupancy Model</a></li>
+              </ul>
+              <div>
+                <a class="btn btn-default" :href="dataset.config.data.url" download><i class="fa fa-download"></i> Dataset (CSV)</a>
+                <button class="btn btn-default" @click="downloadVariables"><i class="fa fa-download"></i> Variables (CSV)</button>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="row">
+            <div class="col-xs-12">
+              <h4>Catchment Shapefiles</h4>
+              <p>Shapefiles containing all catchments are available as pre-staged collections based on the HUC2 regions (see <a href="https://water.usgs.gov/GIS/regions.html" target="_blank">USGS Hydrologic Unit Map</a> for region boundaries). More information about the catchment delineation can be found on the <a href="http://conte-ecology.github.io/shedsGisData/" target="_blank">SHEDS GIS Data</a> website under the NHDHRDV2 section.</p>
+              <p><strong>Documentation: </strong><a href="http://ecosheds.org/assets/nhdhrd/v2/NHDHRDV2_Documentation.docx" download>NHDHRDV2_Documentation.docx</a></p>
+              <ul>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/spatial_01.zip" download>spatial_01.zip</a> (324 mb)</li>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/spatial_02.zip" download>spatial_02.zip</a> (537 mb)</li>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/spatial_03.zip" download>spatial_03.zip</a> (114 mb)</li>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/spatial_04.zip" download>spatial_04.zip</a> (203 mb)</li>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/spatial_05.zip" download>spatial_05.zip</a> (353 mb)</li>
+                <li><a href="http://ecosheds.org/assets/nhdhrd/v2/spatial_06.zip" download>spatial_06.zip</a> (41 mb)</li>
+              </ul>
             </div>
           </div>
         </div>

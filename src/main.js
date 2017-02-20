@@ -2,6 +2,7 @@ var Vue = require('vue'),
     VueResource = require('vue-resource'),
     Promise = require('bluebird'),
     topojson = require('topojson-client'),
+    json2csv = require('json2csv'),
     queryString = require('query-string'),
     Clipboard = require('clipboard'),
     Joi = require('joi');
@@ -21,12 +22,11 @@ Vue.component('ice-legend', require('./components/iceLegend'));
 
 var IceCrossfilter = require('./components/iceCrossfilter.js');
 
-var downloadJsonFile = function (data, filename) {
+var downloadFile = function (data, filename) {
   var a = document.createElement("a");
   document.body.appendChild(a);
   a.style = "display: none";
-  var json = JSON.stringify(data),
-      blob = new Blob([json], {type: "octet/stream"}),
+  var blob = new Blob([data], {type: "octet/stream"}),
       url = window.URL.createObjectURL(blob);
   a.href = url;
   a.download = filename;
@@ -974,10 +974,72 @@ var app = window.app = new Vue({
           features: features
         };
 
-        downloadJsonFile(data, 'ice-sheds-' + this.state.layer + '.geojson');
+        var json = JSON.stringify(data);
+
+        downloadFile(json, 'ice-sheds-' + this.state.layer + '-' + this.state.variable + '.geojson');
 
         this.setStatus();
-      }.bind(this), 0)
+      }.bind(this), 0);
+    },
+    downloadCatchmentLayer: function (filtered) {
+      var vm = this;
+      this.setStatus('Downloading file...');
+
+      setTimeout(function () {
+        var features = this.state.map.catchmentLayer.features
+          .filter(function (d) {
+            return !filtered || vm.xf.hasCatchment(d.id);
+          })
+          .map(function (d) {
+            var props = vm.xf.getCatchmentValue(d.id);
+
+            return {
+              type: d.type,
+              id: d.id,
+              properties: props,
+              geometry: d.geometry
+            };
+          });
+
+        var data = {
+          type: "FeatureCollection",
+          features: features
+        };
+
+        var json = JSON.stringify(data);
+
+        downloadFile(json, 'ice-sheds-catchments.geojson');
+
+        this.setStatus();
+      }.bind(this), 0);
+    },
+    downloadVariables: function () {
+      var vm = this;
+      this.setStatus('Downloading file...');
+      setTimeout(function () {
+        var variables = [];
+        variables.push({
+          id: this.dataset.config.columns.id,
+          description: 'Catchment ID'
+        });
+        variables.push({
+          id: this.dataset.config.columns.area,
+          description: 'Area (sq km)'
+        });
+        this.dataset.config.variables.forEach(function (d) {
+          variables.push({
+            id: d.id,
+            description: d.label
+          });
+        });
+
+        var fields = ['id', 'description'];
+        var csv = json2csv({data: variables, fields: fields});
+
+        downloadFile(csv, 'ice-sheds-variables.csv');
+
+        this.setStatus();
+      }.bind(this), 0);
     },
     initializeUi: function () {
       // initialize share copy-to-clipboard button
