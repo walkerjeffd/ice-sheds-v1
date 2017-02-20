@@ -41,8 +41,7 @@ var app = window.app = new Vue({
   data: {
     shareUrl: '',
     show: {
-      loading: true,
-      unselectedAggregation: true
+      loading: true
     },
     dataset: {
       count: 0,
@@ -144,6 +143,7 @@ var app = window.app = new Vue({
           zoom: 6
         },
         aggregationLayer: undefined,
+        showUnselectedAggregation: true,
         getAggregationValue: function () { return null; },
         getCatchmentValue: function () { return null; }
       }
@@ -298,6 +298,11 @@ var app = window.app = new Vue({
 
             if (feature) {
               vm.selectAggregation(feature);
+
+              if (query.map && query.map.showUnselectedAggregation !== undefined) {
+                vm.state.map.showUnselectedAggregation = query.map.showUnselectedAggregation;
+              }
+
               return Promise.resolve(feature);
             } else {
               return Promise.reject(new Error('Failed to select feature "' + query.selected.aggregation + '"'));
@@ -487,12 +492,17 @@ var app = window.app = new Vue({
         }
       }
 
-      if (newState.map && newState.map.view) {
-        if (newState.map.view.center) {
-          state.map.view.center = newState.map.view.center;
+      if (newState.map) {
+        if (newState.map.view) {
+          if (newState.map.view.center) {
+            state.map.view.center = newState.map.view.center;
+          }
+          if (newState.map.view.zoom) {
+            state.map.view.zoom = newState.map.view.zoom;
+          }
         }
-        if (newState.map.view.zoom) {
-          state.map.view.zoom = newState.map.view.zoom;
+        if (newState.map.showUnselectedAggregation !== undefined) {
+          state.map.showUnselectedAggregation = newState.map.showUnselectedAggregation;
         }
       }
     },
@@ -828,7 +838,7 @@ var app = window.app = new Vue({
         }
 
         // reset show unselected aggregation
-        vm.show.unselectedAggregation = true;
+        vm.state.map.showUnselectedAggregation = true;
       }
     },
     selectCatchment: function (feature) {
@@ -1025,7 +1035,8 @@ var app = window.app = new Vue({
         view: {
           center: this.state.map.view.center,
           zoom: this.state.map.view.zoom
-        }
+        },
+        showUnselectedAggregation: this.state.map.showUnselectedAggregation
       };
 
       // stringify nested objects
@@ -1077,7 +1088,8 @@ var app = window.app = new Vue({
               Joi.number().min(-180).max(180)
             ),
             zoom: Joi.number().integer().min(5).max(18)
-          })
+          }),
+          showUnselectedAggregation: Joi.boolean()
         }),
         selected: Joi.object().keys({
           aggregation: Joi.string(),
@@ -1107,7 +1119,7 @@ var app = window.app = new Vue({
     },
     showUnselectedAggregation: function (show) {
       // console.log('app:showUnselectedAggregation(%s)', show);
-      this.show.unselectedAggregation = show;
+      this.state.map.showUnselectedAggregation = show;
     }
   }
 })

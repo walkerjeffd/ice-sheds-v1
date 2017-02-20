@@ -119,7 +119,7 @@
     <ice-select-aggregation
       :feature-type="featureType"
       :feature="state.selected.aggregation"
-      :show="show.unselectedAggregation"
+      :show="state.map.showUnselectedAggregation"
       v-if="state.selected.aggregation"
       v-on:unselect="selectAggregation"
       v-on:zoom="zoomToFeature"
@@ -150,7 +150,7 @@
       :get-catchment-value="state.map.getCatchmentValue"
       :aggregation-tooltip="aggregationTooltip"
       :catchment-tooltip="catchmentTooltip"
-      :show-unselected-aggregation="show.unselectedAggregation"
+      :show-unselected-aggregation="state.map.showUnselectedAggregation"
       v-on:select-aggregation="selectAggregation"
       v-on:select-catchment="selectCatchment">
     </ice-map>
