@@ -109,10 +109,11 @@ module.exports = function (evt) {
         return "M" + (0.5 * x) + "," + y + "A6,6 0 0 " + e + " " + (6.5 * x) + "," + (y + 6) + "V" + (2 * y - 6) + "A6,6 0 0 " + e + " " + (0.5 * x) + "," + (2 * y) + "Z" + "M" + (2.5 * x) + "," + (y + 8) + "V" + (2 * y - 8) + "M" + (4.5 * x) + "," + (y + 8) + "V" + (2 * y - 8);
       }
 
-      evt.$on('filter:refresh', function () {
-        // console.log('filter(' + vm.id + '):evt filter:refresh', vm.range);
-        vm.render();
-      });
+      evt.$on('filter:refresh', this.render);
+      // evt.$on('filter:refresh', function () {
+      //   console.log('filter(' + vm.id + '):evt filter:refresh');
+      //   vm.render();
+      // });
     },
     computed: {
       valueFormat: function () {
@@ -145,7 +146,7 @@ module.exports = function (evt) {
         }
       },
       render: function () {
-        // console.log('filter(' + this.id + '):render()', this.range);
+        // console.log('filter(' + this.id + '):render()');
         var vm = this;
 
         var dim = this.getDim(),
@@ -161,10 +162,8 @@ module.exports = function (evt) {
         this.stats.mean = stats.count > 0 ? stats.sum / stats.count : null;
 
         var selectedDim = this.getSelectedDim();
-console.log('selectedDim', selectedDim);
         if (selectedDim) {
           var selectedGroups = selectedDim.group.all();
-console.log('selectedGroups', selectedGroups);
           if (selectedGroups[0].key < 0) {
             selectedGroups = selectedGroups.slice(1, selectedGroups.length);
           }
@@ -216,6 +215,7 @@ console.log('selectedGroups', selectedGroups);
         // console.log('filter(' + this.id + '):destroy()', d3.select(this.$el));
         // this.svg.remove();
         this.$emit('destroy', this.id);
+        evt.$off('filter:refresh', this.render);
       }
     }
   }
