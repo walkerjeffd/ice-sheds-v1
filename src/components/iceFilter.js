@@ -110,6 +110,7 @@ module.exports = function (evt) {
       }
 
       evt.$on('filter:refresh', this.render);
+      evt.$on('filter:' + this.id + ':destroy', this.destroy);
       // evt.$on('filter:refresh', function () {
       //   console.log('filter(' + vm.id + '):evt filter:refresh');
       //   vm.render();
@@ -146,7 +147,7 @@ module.exports = function (evt) {
         }
       },
       render: function () {
-        // console.log('filter(' + this.id + '):render()');
+        console.log('filter(' + this.id + '):render()');
         var vm = this;
 
         var dim = this.getDim(),
@@ -212,10 +213,9 @@ module.exports = function (evt) {
         }
       },
       destroy: function () {
-        // console.log('filter(' + this.id + '):destroy()', d3.select(this.$el));
-        // this.svg.remove();
-        this.$emit('destroy', this.id);
+        console.log('filter(' + this.id + '):destroy()');
         evt.$off('filter:refresh', this.render);
+        this.$emit('destroy', this.id);
       }
     }
   }

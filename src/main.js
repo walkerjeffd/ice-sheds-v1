@@ -655,7 +655,8 @@ var app = window.app = new Vue({
       // if filter already exists, remove it
       this.state.filters.charts.forEach(function (filter) {
         if (filters.indexOf(filter) < 0) {
-          vm.removeFilter(filter);
+          // vm.removeFilter(filter);
+          evt.$emit('filter:' + filter + ':destroy');
         }
       });
 
