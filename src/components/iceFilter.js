@@ -82,6 +82,19 @@ module.exports = function (evt) {
         .attr("transform", "translate(0," + this.height + ")")
         .call(this.axes.x)
 
+      g.select('.x.axis').selectAll('.tick')
+        .each(function (d, i) {
+          var value;
+          if (vm.variable.clamp.left && i === 0) {
+            value = d3.select(this).text();
+            d3.select(this).select('text').text('<' + value);
+          }
+          if (vm.variable.clamp.right && i === (g.select('.x.axis').selectAll('.tick').size() - 1)) {
+            value = d3.select(this).text();
+            d3.select(this).select('text').text('>' + value);
+          }
+        });
+
       g.append("g").attr("class", "vertical-lines");
 
       var gBrush = g.append("g").attr("class", "brush").call(this.brush);
@@ -117,10 +130,31 @@ module.exports = function (evt) {
         return d3.format(this.variable.format.value);
       },
       rangeLabel: function () {
-        var formatter = this.valueFormat;
-        return this.range && this.range.length == 2 ?
-          formatter(this.range[0]) + ' - ' + formatter(this.range[1]) :
-          formatter(this.variable.min) + ' - ' + formatter(this.variable.max);
+        var formatter = this.valueFormat,
+            minText,
+            maxText;
+
+        if (this.range && this.range.length == 2) {
+          minText = formatter(this.range[0]);
+          maxText = formatter(this.range[1]);
+          if (this.variable.clamp.left && this.range[0] === this.variable.min) {
+            minText = '<' + minText;
+          }
+          if (this.variable.clamp.right && this.range[1] === this.variable.max) {
+            maxText = '>' + maxText;
+          }
+        } else {
+          minText = formatter(this.variable.min);
+          maxText = formatter(this.variable.max);
+          if (this.variable.clamp.left) {
+            minText = '<' + minText;
+          }
+          if (this.variable.clamp.right) {
+            maxText = '>' + maxText;
+          }
+        }
+
+        return minText + ' to ' + maxText;
       }
     },
     watch: {

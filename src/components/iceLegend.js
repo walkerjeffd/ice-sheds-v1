@@ -109,7 +109,7 @@ module.exports = {
         .attr('y', 20)
         .style('fill', 'gray');
 
-      tickLabels.selectAll('text')
+      var tickLabelText = tickLabels.selectAll('text')
         .data(tickValues)
         .enter()
         .append('text')
@@ -121,7 +121,16 @@ module.exports = {
         .attr('font-face', 'arial')
         .attr('font-size', '10')
         .attr('text-anchor', 'middle')
-        .text(function (d) { return vm.formatter(d); })
+        .text(function (d, i) {
+          var text = vm.formatter(d);
+          if (vm.variable.clamp.right && i === tickValues.length - 1) {
+            text = '>' + text;
+          }
+          if (vm.variable.clamp.left && i === 0) {
+            text = '<' + text;
+          }
+          return text;
+        })
     }
   }
 }

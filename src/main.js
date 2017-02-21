@@ -184,10 +184,13 @@ var app = window.app = new Vue({
           "min": 0,
           "max": 1,
           "scale": 1,
-          "interval": 0.025,
           "format": {
             "value": "%",
             "axis": "%"
+          },
+          "clamp": {
+            "left": false,
+            "right": false
           }
         };
       } else {
