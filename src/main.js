@@ -609,9 +609,23 @@ var app = window.app = new Vue({
         return;
       }
 
-      this.xf.setFilterDimRange(id, range);
+      var expandedRange = range ? [range[0], range[1]] : undefined;
+      if (range) {
+        var variable = this.getVariableById(id);
+
+        if (range[1] === variable.max) {
+          expandedRange[1] = Infinity;
+        }
+        if (range[0] === variable.min) {
+          expandedRange[0] = -Infinity;
+        }
+      } else {
+
+      }
+
+      this.xf.setFilterDimRange(id, expandedRange);
       if (this.state.selected.xf) {
-        this.state.selected.xf.setFilterDimRange(id, range);
+        this.state.selected.xf.setFilterDimRange(id, expandedRange);
       }
 
       this.state.xf.filters[idx].range = range;

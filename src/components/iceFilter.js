@@ -111,10 +111,6 @@ module.exports = function (evt) {
 
       evt.$on('filter:refresh', this.render);
       evt.$on('filter:' + this.id + ':destroy', this.destroy);
-      // evt.$on('filter:refresh', function () {
-      //   console.log('filter(' + vm.id + '):evt filter:refresh');
-      //   vm.render();
-      // });
     },
     computed: {
       valueFormat: function () {
@@ -147,7 +143,7 @@ module.exports = function (evt) {
         }
       },
       render: function () {
-        console.log('filter(' + this.id + '):render()');
+        // console.log('filter(' + this.id + '):render()');
         var vm = this;
 
         var dim = this.getDim(),

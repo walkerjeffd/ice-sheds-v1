@@ -174,9 +174,11 @@ module.exports = function (data) {
       return d[id] === null ? -Infinity : d[id];
     });
 
+    var interval = (variable.max - variable.min) / 40;
+
     dim.group = dim.dimension
       .group(function(d) {
-        return d >= variable.max ? variable.max - variable.interval : Math.floor(d/variable.interval) * variable.interval;
+        return d >= variable.max ? variable.max - interval : Math.floor(d/interval) * interval;
       });
 
 
