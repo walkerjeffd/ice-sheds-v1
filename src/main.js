@@ -118,7 +118,7 @@ var app = window.app = new Vue({
       },
     },
     state: {
-      configUrl: '/data/dataset/sheds-default.json',
+      configUrl: 'data/dataset/sheds-default.json',
       message: 'Initializing...',
       layer: null,
       variable: null,
