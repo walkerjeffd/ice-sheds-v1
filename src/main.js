@@ -51,6 +51,7 @@ var app = window.app = new Vue({
       layer: {
         config: {
           dropupAuto: false
+        }
         },
         options: []
       },
@@ -95,30 +96,30 @@ var app = window.app = new Vue({
           }
         ],
         overlays: [
-          {
-            label: 'Major Streams',
-            layer: 'sheds:flowlines_strahler_3',
-            visible: true
-          }, {
-            label: 'Minor Streams',
-            layer: 'sheds:detailed_flowlines',
-            minZoom: 10
-          }, {
-            label: 'NHD Waterbodies',
-            layer: 'sheds:waterbodies'
-          }, {
-            label: 'HUC8 Boundaries',
-            layer: 'sheds:wbdhu8'
-          }, {
-            label: 'HUC12 Boundaries',
-            layer: 'sheds:wbdhu12',
-            minZoom: 10
-          }
+          // {
+          //   label: 'Major Streams',
+          //   layer: 'sheds:flowlines_strahler_3',
+          //   visible: true
+          // }, {
+          //   label: 'Minor Streams',
+          //   layer: 'sheds:detailed_flowlines',
+          //   minZoom: 10
+          // }, {
+          //   label: 'NHD Waterbodies',
+          //   layer: 'sheds:waterbodies'
+          // }, {
+          //   label: 'HUC8 Boundaries',
+          //   layer: 'sheds:wbdhu8'
+          // }, {
+          //   label: 'HUC12 Boundaries',
+          //   layer: 'sheds:wbdhu12',
+          //   minZoom: 10
+          // }
         ]
       },
     },
     state: {
-      configUrl: 'data/dataset/sheds-default.json',
+      configUrl: 'data/dataset/cce-default.json',
       message: 'Initializing...',
       layer: null,
       variable: null,
