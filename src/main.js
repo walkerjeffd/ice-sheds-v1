@@ -51,7 +51,6 @@ var app = window.app = new Vue({
       layer: {
         config: {
           dropupAuto: false
-        }
         },
         options: []
       },
@@ -116,10 +115,10 @@ var app = window.app = new Vue({
           //   minZoom: 10
           // }
         ]
-      },
+      }
     },
     state: {
-      configUrl: 'data/dataset/cce-default.json',
+      configUrl: 'data/dataset/sheds-default.json',
       message: 'Initializing...',
       layer: null,
       variable: null,
@@ -153,7 +152,7 @@ var app = window.app = new Vue({
         getAggregationValue: function () { return null; },
         getCatchmentValue: function () { return null; }
       }
-    },
+    }
   },
   filters: {
     number: function (value) {
