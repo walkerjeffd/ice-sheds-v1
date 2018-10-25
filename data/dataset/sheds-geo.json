@@ -1,0 +1,114 @@
+{
+  "data": {
+    "url": "https://s3.amazonaws.com/sheds-ice/dataset-20160322-1.csv"
+  },
+  "columns": {
+    "area": "AreaSqKM",
+    "id": "featureid"
+  },
+  "layers": [
+    {
+      "id": "huc4",
+      "label": "HUC4",
+      "url": "data/huc4.topojson"
+    }, {
+      "id": "huc6",
+      "label": "HUC6",
+      "url": "data/huc6.topojson"
+    }, {
+      "id": "huc8",
+      "label": "HUC8",
+      "url": "data/huc8.topojson"
+    }, {
+      "id": "huc10",
+      "label": "HUC10",
+      "url": "data/huc10.topojson"
+    }
+  ],
+  "region": {
+    "id": "stusps",
+    "options": [
+      { "id": "CT", "label": "Connecticut" },
+      { "id": "ME", "label": "Maine" },
+      { "id": "MA", "label": "Massachusetts" },
+      { "id": "NH", "label": "New Hampshire" },
+      { "id": "RI", "label": "Rhode Island" },
+      { "id": "VT", "label": "Vermont" }
+    ]
+  },
+  "variables": [
+    {
+      "id": "elevation",
+      "label": "Elevation (m)",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1000,
+      "scale": 1,
+      "interval": 25,
+      "format": {
+        "axis": ",.1f",
+        "value": ",.1f"
+      }
+    }, {
+      "id": "forest",
+      "label": "Forest Cover (%)",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 100,
+      "interval": 0.025,
+      "format": {
+        "axis": "%",
+        "value": "%"
+      }
+    }, {
+      "id": "agriculture",
+      "label": "Agriculture Cover (%)",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "interval": 0.025,
+      "scale": 100,
+      "format": {
+        "axis": "%",
+        "value": "%"
+      }
+    }, {
+      "id": "summer_prcp_mm",
+      "label": "Mean Summer Precip (mm/mon)",
+      "aggregation": true,
+      "filter": true,
+      "min": 70,
+      "max": 230,
+      "interval": 4,
+      "scale": 1,
+      "format": {
+        "axis": ",.1f",
+        "value": ",.1f"
+      }
+    }, {
+      "id": "meanSummerTemp",
+      "label": "Mean Summer Temp (C)",
+      "aggregation": true,
+      "filter": true,
+      "min": 14,
+      "max": 24,
+      "interval": 0.25,
+      "scale": 1,
+      "format": {
+        "axis": ",.1f",
+        "value": ",.1f"
+      }
+    }
+  ],
+  "state": {
+    "layer": "huc10",
+    "variable": "forest",
+    "filters": {
+      "region": ["CT", "ME", "MA", "NH", "RI", "VT"]
+    }
+  }
+}

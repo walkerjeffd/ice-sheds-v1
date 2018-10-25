@@ -1,0 +1,380 @@
+{
+  "data": {
+    "url": "https://s3.amazonaws.com/sheds-ice/dataset-20181025.csv"
+  },
+  "columns": {
+    "area": "AreaSqKM",
+    "id": "featureid"
+  },
+  "layers": [
+    {
+      "id": "huc4",
+      "column": "huc4",
+      "label": "HUC4",
+      "url": "data/huc4.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": "*"
+      }]
+    }, {
+      "id": "huc6",
+      "column": "huc6",
+      "label": "HUC6",
+      "url": "data/huc6.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": "*"
+      }]
+    }, {
+      "id": "huc8",
+      "column": "huc8",
+      "label": "HUC8",
+      "url": "data/huc8.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": "*"
+      }]
+    }, {
+      "id": "huc10",
+      "column": "huc10",
+      "label": "HUC10",
+      "url": "data/huc10.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": "*"
+      }]
+    }, {
+      "id": "huc12-01",
+      "column": "huc12",
+      "label": "HUC12 (Region 1)",
+      "url": "data/huc12-01.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": ["01"]
+      }]
+    }, {
+      "id": "huc12-02",
+      "column": "huc12",
+      "label": "HUC12 (Region 2)",
+      "url": "data/huc12-02.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": ["02"]
+      }]
+    }, {
+      "id": "huc12-03",
+      "column": "huc12",
+      "label": "HUC12 (Region 3)",
+      "url": "data/huc12-03.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": ["03"]
+      }]
+    }, {
+      "id": "huc12-04",
+      "column": "huc12",
+      "label": "HUC12 (Region 4)",
+      "url": "data/huc12-04.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": ["04"]
+      }]
+    }, {
+      "id": "huc12-05",
+      "column": "huc12",
+      "label": "HUC12 (Region 5)",
+      "url": "data/huc12-05.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": ["05"]
+      }]
+    }, {
+      "id": "huc12-06",
+      "column": "huc12",
+      "label": "HUC12 (Region 6)",
+      "url": "data/huc12-06.topojson",
+      "regions": [{
+        "id": "huc2",
+        "values": ["06"]
+      }]
+    }
+  ],
+  "regions": [
+    {
+      "id": "stusps",
+      "options": [
+        { "id": "CT", "label": "Connecticut" },
+        { "id": "DE", "label": "Delaware" },
+        { "id": "DC", "label": "District of Columbia" },
+        { "id": "ME", "label": "Maine" },
+        { "id": "MD", "label": "Maryland" },
+        { "id": "MA", "label": "Massachusetts" },
+        { "id": "NH", "label": "New Hampshire" },
+        { "id": "NJ", "label": "New Jersey" },
+        { "id": "NY", "label": "New York" },
+        { "id": "PA", "label": "Pennsylvania" },
+        { "id": "RI", "label": "Rhode Island" },
+        { "id": "VT", "label": "Vermont" },
+        { "id": "VA", "label": "Virginia" },
+        { "id": "WV", "label": "West Virginia" }
+      ]
+    },
+    {
+      "id": "huc2"
+    }
+  ],
+  "variables": [
+    {
+      "id": "UpAreaSqKM",
+      "label": "Upstream Drainage Area (km2)",
+      "aggregation": false,
+      "filter": true,
+      "min": 0,
+      "max": 100,
+      "scale": 1,
+      "format": {
+        "value": ",.1f",
+        "axis": ",.0f"
+      },
+      "clamp": {
+        "left": false,
+        "right": true
+      }
+    },
+    {
+      "id": "elevation",
+      "label": "Elevation (m)",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1000,
+      "scale": 1,
+      "format": {
+        "value": ",.1f",
+        "axis": ",.0f"
+      },
+      "clamp": {
+        "left": false,
+        "right": true
+      }
+    }, {
+      "id": "forest",
+      "label": "Forest Cover (%)",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 100,
+      "format": {
+        "value": "%",
+        "axis": "%"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "agriculture",
+      "label": "Agriculture Cover (%)",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 100,
+      "format": {
+        "value": "%",
+        "axis": "%"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "summer_prcp_mm",
+      "label": "Mean Summer Precip (mm/mon)",
+      "aggregation": true,
+      "filter": true,
+      "min": 70,
+      "max": 150,
+      "scale": 1,
+      "format": {
+        "value": ",.1f",
+        "axis": ",.0f"
+      },
+      "clamp": {
+        "left": false,
+        "right": true
+      }
+    }, {
+      "id": "meanSummerTemp",
+      "label": "Mean Summer Temp (C)",
+      "aggregation": true,
+      "filter": true,
+      "min": 10,
+      "max": 26,
+      "scale": 1,
+      "format": {
+        "value": ",.1f",
+        "axis": ",.0f"
+      },
+      "clamp": {
+        "left": true,
+        "right": true
+      }
+    }, {
+      "id": "meanDays_18",
+      "label": "Mean Days per Year > 18 C",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 160,
+      "scale": 1,
+      "format": {
+        "value": ",.0f",
+        "axis": ",.0f"
+      },
+      "clamp": {
+        "left": false,
+        "right": true
+      }
+    }, {
+      "id": "meanDays_22",
+      "label": "Mean Days per Year > 22 C",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 60,
+      "scale": 1,
+      "format": {
+        "value": ",.0f",
+        "axis": ",.0f"
+      },
+      "clamp": {
+        "left": false,
+        "right": true
+      }
+    }, {
+      "id": "occ_current",
+      "label": "Probability of Brook Trout Occupancy",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 1,
+      "format": {
+        "value": "%",
+        "axis": "%"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "max_temp_0_3",
+      "label": "Threshold Temp (C) for 30% Occupancy",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 6,
+      "scale": 1,
+      "format": {
+        "value": ".1f",
+        "axis": ".1f"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "max_temp_0_5",
+      "label": "Threshold Temp (C) for 50% Occupancy",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 6,
+      "scale": 1,
+      "format": {
+        "value": ".1f",
+        "axis": ".1f"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "max_temp_0_7",
+      "label": "Threshold Temp (C) for 70% Occupancy",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 6,
+      "scale": 1,
+      "format": {
+        "value": ".1f",
+        "axis": ".1f"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "plus2",
+      "label": "Occupancy Prob with 2 C Incr. in July Temp",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 1,
+      "format": {
+        "value": "%",
+        "axis": "%"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "plus4",
+      "label": "Occupancy Prob with 4 C Incr. in July Temp",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 1,
+      "format": {
+        "value": "%",
+        "axis": "%"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }, {
+      "id": "plus6",
+      "label": "Occupancy Prob with 6 C Incr. in July Temp",
+      "aggregation": true,
+      "filter": true,
+      "min": 0,
+      "max": 1,
+      "scale": 1,
+      "format": {
+        "value": "%",
+        "axis": "%"
+      },
+      "clamp": {
+        "left": false,
+        "right": false
+      }
+    }
+  ],
+  "state": {
+    "layer": "huc8",
+    "variable": "elevation",
+    "filters": {
+      "regions": [{
+        "id": "stusps",
+        "values": ["CT", "DE", "DC", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT", "VA", "WV"]
+      }]
+    }
+  }
+}
