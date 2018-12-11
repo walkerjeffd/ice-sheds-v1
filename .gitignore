@@ -3,3 +3,7 @@ node_modules/
 
 data/*.topojson
 js/
+
+.Rhistory
+scripts/dataset/*.csv
+scripts/dataset/*.gz
