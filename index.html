@@ -29,8 +29,7 @@
       <div class="ice-box">
         <div class="ice-box-title">Controls</div>
         <div class="btn-group btn-group-xs">
-          <button class="btn btn-default disabled"><i class="fa fa-question-circle"></i> About</button>
-          <button class="btn btn-default disabled" data-toggle="modal" data-target="#data-modal"><i class="fa fa-table"></i> Dataset</button>
+          <button class="btn btn-default" data-toggle="modal" data-target="#modal-about"><i class="fa fa-question-circle"></i> About</button>
           <button class="btn btn-default" @click="share"><i class="fa fa-share"></i> Share</button>
           <button class="btn btn-default" data-toggle="modal" data-target="#modal-download"><i class="fa fa-download"></i> Download</button>
         </div>
@@ -178,6 +177,38 @@
               <p>Copy this URL to share your current ICE view.</p>
             </div>
           </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" tabindex="-1" role="dialog" id="modal-about">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">About</h4>
+        </div>
+        <div class="modal-body">
+          <p>
+            The <strong>Interactive Catchment Explorer (ICE)</strong> is a data visualization tool for exploring geospatial environmental datasets. ICE is part of the <a href="http://ecosheds.org" target="_blank">Spatial Hydro-Ecological Decision System (SHEDS)</a> project.
+          </p>
+          <hr>
+          <strong>Development Team</strong>
+          <ul>
+            <li>
+              Dr. Jeffrey D. Walker, <a href="https://walkerenvres.com" target="_blank">Walker Environmental Research LLC</a>
+            </li>
+            <li>
+              Dr. Benjamin Letcher, <a href="http://www.lsc.usgs.gov/?q=cafb-ben-letcher" target="_blank">USGS Conte Anadromous Fish Lab</a> and<a href="https://eco.umass.edu/people/faculty/letcher-ben/" target="_blank">UMass Amherst</a>
+            </li>
+          </ul>
+          <hr>
+          <strong>Funding</strong>
+          <p>ICE is funded by the <a href="https://necsc.umass.edu/" target="_blank">NE Climate Science Center</a>, <a href="http://northatlanticlcc.org/" target="_blank">North Atlantic Landscape Conservation Cooperative</a>, <a href="http://www.usgs.gov/hurricane/sandy/#overview.html" target="_blank">USGS and DOI Hurricane Sandy Restoration funds</a>, and the <a href="https://nccwsc.usgs.gov/" target="_blank">USGS National Climate Science Center</a>.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
